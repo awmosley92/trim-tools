@@ -1,0 +1,44 @@
+name: Deploy to Pages
+
+# Stamps sw.js with the commit SHA at deploy time, so every push busts the
+# phone's cache automatically. Nothing is committed back to the repo — the
+# version is injected into the artifact only, so there is no push loop.
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Stamp service worker version
+        run: |
+          SHORT="${GITHUB_SHA::7}"
+          sed -i "s|^const VERSION = .*|const VERSION = 'ds-${SHORT}';|" sw.js
+          echo "Service worker version:"
+          grep '^const VERSION' sw.js
+
+      - uses: actions/configure-pages@v5
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: .
+
+      - id: deployment
+        uses: actions/deploy-pages@v4
