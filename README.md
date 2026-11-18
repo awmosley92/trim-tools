@@ -1,6 +1,6 @@
 # Digital Scribe — Trim Tools
 
-Two offline finish-carpentry calculators, packaged as an installable web app.
+Two offline finish-carpentry calculators, packaged as an installable web app. 100% vibecoded.
 
 - `stool.html` — Sheet S-01, window stool & horn calculator
 - `reveal.html` — Sheet S-02, reveal finder for reused trim
