@@ -1,0 +1,1182 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="light">
+<meta name="robots" content="noindex, nofollow">
+<title>Digital Scribe — Window Stool &amp; Horn Calculator</title>
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#E9EAE4">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Trim Tools">
+<link rel="apple-touch-icon" href="icons/icon-180.png">
+<link rel="icon" href="icons/icon-192.png">
+<style>
+  :root{
+    --ink:#16181A;
+    --ink-2:#4A4F52;
+    --ink-3:#7C8286;
+    --paper:#E9EAE4;
+    --card:#FBFBF9;
+    --rule:#C9CBC2;
+    --mark:#E4B200;   /* tape blade yellow */
+    --cut:#C8412A;    /* waste / warning red */
+    --dim:#1F5673;    /* layout blue: dimension lines */
+    --mono: ui-monospace, "SF Mono", SFMono-Regular, Menlo, Consolas, "Roboto Mono", monospace;
+    --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  }
+  *{box-sizing:border-box; -webkit-tap-highlight-color:transparent}
+  html,body{margin:0;padding:0}
+  body{
+    background:var(--paper);
+    color:var(--ink);
+    font-family:var(--sans);
+    font-size:16px;
+    line-height:1.4;
+    padding:0 0 env(safe-area-inset-bottom);
+    -webkit-text-size-adjust:100%;
+  }
+  .wrap{max-width:780px;margin:0 auto;padding:0 12px 48px}
+
+  /* ---------- title block ---------- */
+  header{
+    border-bottom:2px solid var(--ink);
+    margin:0 0 16px;
+    padding:18px 0 0;
+  }
+  h1{
+    font-size:clamp(20px,6vw,30px);
+    line-height:1;
+    letter-spacing:-.02em;
+    font-weight:800;
+    text-transform:uppercase;
+    margin:0 0 2px;
+  }
+  h1 em{font-style:normal;color:var(--ink-3);font-weight:500}
+  .tagline{
+    font-size:11px;letter-spacing:.14em;text-transform:uppercase;
+    color:var(--ink-2);margin:0 0 12px;
+  }
+  .titleblock{
+    display:flex;flex-wrap:wrap;gap:0;
+    border-top:1px solid var(--rule);
+  }
+  .tb{
+    flex:1 1 0;min-width:80px;padding:6px 8px 7px;
+    border-right:1px solid var(--rule);
+  }
+  .tb:last-child{border-right:0}
+  .tb b{display:block;font-size:9px;letter-spacing:.16em;text-transform:uppercase;color:var(--ink-3);font-weight:600}
+  .tb span{font-family:var(--mono);font-size:13px;font-variant-numeric:tabular-nums}
+
+  /* ---------- panels ---------- */
+  section{background:var(--card);border:1px solid var(--rule);margin:0 0 14px}
+  .sechead{
+    display:flex;align-items:baseline;gap:8px;
+    padding:9px 12px;border-bottom:1px solid var(--rule);
+    background:#F2F2EE;
+  }
+  .sechead h2{
+    margin:0;font-size:11px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;
+  }
+  .sechead .hint{font-size:11px;color:var(--ink-3);margin-left:auto;letter-spacing:.02em}
+  .body{padding:12px}
+
+  /* ---------- unit switch ---------- */
+  .switch{display:flex;border:1px solid var(--ink);width:max-content;margin-left:auto}
+  .switch button{
+    font-family:var(--mono);font-size:12px;letter-spacing:.08em;text-transform:uppercase;
+    background:transparent;border:0;padding:5px 12px;cursor:pointer;color:var(--ink);
+  }
+  .switch button[aria-pressed="true"]{background:var(--ink);color:var(--card)}
+
+  /* ---------- method picker ---------- */
+  .methods{display:grid;gap:8px;margin:0 0 14px}
+  .method{
+    display:flex;gap:10px;align-items:flex-start;
+    border:1px solid var(--rule);padding:10px 11px;cursor:pointer;background:#fff;
+  }
+  .method:has(input:checked){border-color:var(--ink);box-shadow:inset 3px 0 0 var(--mark)}
+  .method input{margin:3px 0 0;accent-color:var(--ink);width:17px;height:17px;flex:0 0 auto}
+  .method .m-t{font-size:14px;font-weight:650;line-height:1.25}
+  .method .m-s{font-size:12px;color:var(--ink-3);line-height:1.3;margin-top:2px}
+  .method .m-v{font-family:var(--mono);font-size:11px;color:var(--dim);margin-top:3px}
+
+  /* ---------- fields ---------- */
+  .grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  .grid.one{grid-template-columns:1fr}
+  @media (max-width:420px){.grid{grid-template-columns:1fr}}
+  .field{position:relative;min-width:0}
+  .field label{
+    display:block;font-size:10px;letter-spacing:.13em;text-transform:uppercase;
+    color:var(--ink-2);font-weight:650;margin:0 0 4px;
+  }
+  .field label i{font-style:normal;color:var(--ink-3);font-weight:500;letter-spacing:.02em;text-transform:none}
+  .inp{display:flex;align-items:stretch;border:1px solid var(--ink-3);background:#fff}
+  .inp:focus-within{border-color:var(--ink);outline:2px solid var(--mark);outline-offset:-1px}
+  .inp input{
+    flex:1 1 auto;min-width:0;border:0;background:transparent;outline:0;
+    font-family:var(--mono);font-size:18px;font-variant-numeric:tabular-nums;
+    padding:9px 8px;color:var(--ink);
+  }
+  .inp .unit{
+    flex:0 0 auto;display:flex;align-items:center;padding:0 9px;
+    font-family:var(--mono);font-size:12px;color:var(--ink-3);border-left:1px solid #E4E5E0;
+  }
+  .subseg{display:flex;border:1px solid var(--ink-3);margin:8px 0 0}
+  .subseg label{flex:1 1 0;text-align:center;font-size:12px;padding:8px 6px;cursor:pointer;background:#fff;
+    color:var(--ink-2);border-right:1px solid var(--ink-3);line-height:1.2}
+  .subseg label:last-child{border-right:0}
+  .subseg label:has(input:checked){background:var(--ink);color:var(--card)}
+  .subseg input{position:absolute;opacity:0;pointer-events:none}
+  .note{font-size:11.5px;color:var(--ink-3);line-height:1.4;margin:6px 0 0}
+  .note b{font-family:var(--mono);font-weight:600;color:var(--dim)}
+  .note.flag b{color:var(--cut)}
+
+  .chip{display:inline-block;font-family:var(--mono);font-size:9px;letter-spacing:.1em;text-transform:uppercase;
+    padding:2px 6px;border:1px solid;vertical-align:1px}
+  .chip.meas{color:var(--ink-2);border-color:var(--ink-3)}
+  .chip.calc{color:var(--dim);border-color:var(--dim);background:rgba(31,86,115,.07)}
+
+  /* calculated block — deliberately not an input: no white box, blue rule */
+  .derived{margin:16px -12px -12px;padding:12px;background:#F1F3F2;border-top:1px solid var(--rule)}
+  .dhead{display:flex;align-items:center;gap:8px;font-size:10px;letter-spacing:.14em;text-transform:uppercase;
+    color:var(--ink-2);font-weight:650;margin:0 0 10px}
+  .dgrid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  @media (max-width:420px){.dgrid{grid-template-columns:1fr}}
+  .dcell{background:transparent;border-left:3px solid var(--dim);padding:2px 0 2px 10px}
+  .dcell.span{grid-column:1/-1;border-left-color:var(--mark)}
+  .dk{display:flex;align-items:center;gap:8px;font-size:10px;letter-spacing:.13em;text-transform:uppercase;
+    color:var(--ink-2);font-weight:650;margin:0 0 2px}
+  .dcell .out{font-size:24px;color:var(--ink)}
+  .dcell.span .out{font-size:30px}
+  .dn{font-size:11.5px;color:var(--ink-3);line-height:1.4;margin:3px 0 0}
+  .dn b{font-family:var(--mono);font-weight:600;color:var(--dim)}
+  .dn.flag b{color:var(--cut)}
+  .ovr{margin-left:auto;font-family:var(--mono);font-size:10px;letter-spacing:.06em;text-transform:uppercase;
+    background:transparent;border:1px solid var(--ink-3);color:var(--ink-2);padding:2px 7px;cursor:pointer}
+  .ovr[aria-pressed="true"]{background:var(--mark);border-color:var(--ink);color:var(--ink)}
+  .toggle-row{display:flex;align-items:center;gap:9px;margin:12px 0 0;font-size:13px}
+  .toggle-row input{width:18px;height:18px;accent-color:var(--ink)}
+  .subhead{
+    font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-3);
+    font-weight:650;margin:16px 0 7px;padding-top:10px;border-top:1px solid var(--rule);
+  }
+
+  /* ---------- fraction pad ---------- */
+  #pad{display:none;gap:4px;flex-wrap:wrap;margin-top:6px}
+  #pad.on{display:flex}
+  #pad button{
+    font-family:var(--mono);font-size:12px;padding:7px 8px;min-width:38px;
+    border:1px solid var(--rule);background:#F4F4F0;color:var(--ink);cursor:pointer;
+  }
+  #pad button:active{background:var(--mark)}
+  #pad button.clr{color:var(--cut);border-color:var(--cut)}
+
+  /* ---------- readouts ---------- */
+  .banner{padding:10px 12px;font-size:13px;line-height:1.35;border-left:4px solid}
+  .banner+.banner{margin-top:8px}
+  .banner.err{background:#FBEDEA;border-color:var(--cut);color:#7B2415}
+  .banner.warn{background:#FCF6E0;border-color:var(--mark);color:#5B4700}
+  .banner b{display:block;font-size:10px;letter-spacing:.14em;text-transform:uppercase;margin-bottom:2px}
+
+  .hero{border-bottom:1px solid var(--rule);padding:14px 12px 12px}
+  .hero .k{font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:var(--ink-2);font-weight:650}
+  .hero .v{margin-top:2px}
+  .out{
+    display:inline-flex;align-items:baseline;gap:.12em;
+    font-family:var(--mono);font-variant-numeric:tabular-nums;font-weight:600;
+    letter-spacing:-.01em;
+  }
+  .out .f{display:inline-flex;flex-direction:column;line-height:1;font-size:.44em;font-weight:600;
+    align-self:center;text-align:center;margin-left:.14em}
+  .out .f i{font-style:normal;padding:0 .1em}
+  .out .f i:first-child{border-bottom:1px solid currentColor;padding-bottom:.1em}
+  .out .f i:last-child{padding-top:.1em}
+  .out .u{font-size:.42em;color:var(--ink-3);margin-left:.1em;align-self:flex-start}
+  .hero .out{font-size:40px}
+  .hero .dec{font-family:var(--mono);font-size:12px;color:var(--ink-3);margin-top:2px}
+
+  .rows{display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--rule)}
+  @media (max-width:420px){.rows{grid-template-columns:1fr}}
+  .cell{background:var(--card);padding:11px 12px}
+  .cell .k{font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-2);font-weight:650}
+  .cell .out{font-size:22px;margin-top:1px}
+  .cell .n{font-size:11px;color:var(--ink-3);margin-top:1px;line-height:1.3}
+  .cell.mark{box-shadow:inset 3px 0 0 var(--mark)}
+  .cell.cut{box-shadow:inset 3px 0 0 var(--cut)}
+
+  /* ---------- plan ---------- */
+  #plan{padding:8px 4px 4px;overflow:hidden}
+  #plan svg{display:block;width:100%;height:auto}
+  .legend{
+    display:flex;flex-wrap:wrap;gap:12px;padding:8px 12px 11px;border-top:1px solid var(--rule);
+    font-size:11px;color:var(--ink-2);
+  }
+  .legend span{display:flex;align-items:center;gap:5px}
+  .sw{width:14px;height:10px;border:1px solid var(--ink);display:inline-block}
+  .sw.tongue{background:rgba(228,178,0,.28)}
+  .sw.horn{background:#fff}
+  .sw.waste{background:repeating-linear-gradient(45deg,#fff 0 3px,rgba(200,65,42,.55) 3px 5px);border-color:var(--cut);border-style:dashed}
+
+  /* ---------- steps ---------- */
+  ol.steps{margin:0;padding:0;list-style:none;counter-reset:s}
+  ol.steps li{
+    counter-increment:s;position:relative;padding:0 0 12px 34px;font-size:14px;line-height:1.42;
+  }
+  ol.steps li:last-child{padding-bottom:0}
+  ol.steps li::before{
+    content:counter(s,decimal-leading-zero);position:absolute;left:0;top:1px;
+    font-family:var(--mono);font-size:11px;color:var(--dim);border:1px solid var(--rule);
+    width:24px;height:20px;display:flex;align-items:center;justify-content:center;
+  }
+  ol.steps b{font-family:var(--mono);font-weight:600;background:rgba(228,178,0,.3);padding:0 3px}
+  .actions{display:flex;gap:8px;padding:12px;border-top:1px solid var(--rule);flex-wrap:wrap}
+  .actions button{
+    font-family:var(--sans);font-size:13px;font-weight:600;letter-spacing:.02em;
+    padding:10px 14px;border:1px solid var(--ink);background:#fff;color:var(--ink);cursor:pointer;
+  }
+  .actions button:active{background:var(--ink);color:var(--card)}
+  #copyOut{width:100%;margin-top:8px;font-family:var(--mono);font-size:12px;padding:8px;border:1px solid var(--rule);display:none}
+  footer{font-size:11px;color:var(--ink-3);text-align:center;padding:4px 0 0;line-height:1.5}
+
+  @media print{
+    body{background:#fff}
+    .actions,#pad,footer,.sechead .hint{display:none}
+    section{break-inside:avoid;border-color:#999}
+  }
+  @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header>
+  <h1>Digital Scribe <em>/ Stool + Horn</em></h1>
+  <p class="tagline">Top-down cutting blueprint for window stools</p>
+  <div class="titleblock">
+    <div class="tb"><b>Sheet</b><span>S-01</span></div>
+    <div class="tb"><b>Units</b><span id="tbUnits">inches</span></div>
+    <div class="tb"><b>Scale</b><span id="tbScale">—</span></div>
+    <div class="tb"><b>Round</b><span id="tbRound">1/16"</span></div>
+  </div>
+</header>
+
+<section>
+  <div class="sechead">
+    <h2>Measurements</h2>
+    <span class="chip meas" style="margin-left:4px">you measure</span>
+    <div class="switch" role="group" aria-label="Units">
+      <button type="button" id="uIn" aria-pressed="true">in</button>
+      <button type="button" id="uMm" aria-pressed="false">mm</button>
+    </div>
+  </div>
+  <div class="body">
+
+    <div class="methods">
+      <label class="method">
+        <input type="radio" name="method" value="outside" checked>
+        <span>
+          <span class="m-t">Casing to casing</span>
+          <span class="m-s">Outside edge of left casing to outside edge of right casing.</span>
+          <span class="m-v">W_base = measured</span>
+        </span>
+      </label>
+      <label class="method">
+        <input type="radio" name="method" value="top">
+        <span>
+          <span class="m-t">Head casing, long point to long point</span>
+          <span class="m-s">The mitered top trim piece, measured tip to tip.</span>
+          <span class="m-v">W_base = W_top</span>
+        </span>
+      </label>
+      <label class="method">
+        <input type="radio" name="method" value="jamb">
+        <span>
+          <span class="m-t">Jamb opening + reveal + casing</span>
+          <span class="m-s">Use when the casing is off and you're measuring the bare frame. Say which opening you measured — the reveal is set off the finished one.</span>
+          <span class="m-v">W_base = W_finished + 2R + casings</span>
+        </span>
+      </label>
+    </div>
+
+    <div class="grid one" id="rowPrimary">
+      <div class="field" data-show="outside">
+        <label for="wOutside">Casing to casing width</label>
+        <div class="inp"><input id="wOutside" type="text" inputmode="text" autocomplete="off" spellcheck="false"><span class="unit uL">in</span></div>
+      </div>
+      <div class="field" data-show="top">
+        <label for="wTop">Head casing length <i>long pt → long pt</i></label>
+        <div class="inp"><input id="wTop" type="text" inputmode="text" autocomplete="off" spellcheck="false"><span class="unit uL">in</span></div>
+      </div>
+      <div class="field" data-show="jamb">
+        <label for="wJamb">Measured opening width</label>
+        <div class="inp"><input id="wJamb" type="text" inputmode="text" autocomplete="off" spellcheck="false"><span class="unit uL">in</span></div>
+        <div class="subseg">
+          <label><input type="radio" name="jmode" value="finished" checked>Between jamb faces<br><span style="font-size:10px;opacity:.75">finished opening</span></label>
+          <label><input type="radio" name="jmode" value="rough">Framing to framing<br><span style="font-size:10px;opacity:.75">rough opening</span></label>
+        </div>
+        <p class="note" id="jambNote"></p>
+      </div>
+    </div>
+
+    <div class="grid" id="rowCasing" style="margin-top:10px">
+      <div class="field">
+        <label for="reveal">Reveal <i>each side</i></label>
+        <div class="inp"><input id="reveal" type="text" inputmode="text" autocomplete="off" spellcheck="false"><span class="unit uL">in</span></div>
+      </div>
+      <div class="field" data-sym="1">
+        <label for="casing">Side casing width</label>
+        <div class="inp"><input id="casing" type="text" inputmode="text" autocomplete="off" spellcheck="false"><span class="unit uL">in</span></div>
+      </div>
+      <div class="field" data-asym="1">
+        <label for="casingL">Left casing width</label>
+        <div class="inp"><input id="casingL" type="text" inputmode="text" autocomplete="off" spellcheck="false"><span class="unit uL">in</span></div>
+      </div>
+      <div class="field" data-asym="1">
+        <label for="casingR">Right casing width</label>
+        <div class="inp"><input id="casingR" type="text" inputmode="text" autocomplete="off" spellcheck="false"><span class="unit uL">in</span></div>
+      </div>
+      <div class="field">
+        <label for="jambT">Extension jamb thickness <i>each side</i></label>
+        <div class="inp"><input id="jambT" type="text" inputmode="text" autocomplete="off" spellcheck="false"><span class="unit uL">in</span></div>
+      </div>
+    </div>
+
+    <div class="subhead">Stool stock &amp; horns</div>
+    <div class="grid">
+      <div class="field" data-sym="1">
+        <label for="horn">Horn extension <i>past casing</i></label>
+        <div class="inp"><input id="horn" type="text" inputmode="text" autocomplete="off" spellcheck="false"><span class="unit uL">in</span></div>
+      </div>
+      <div class="field" data-asym="1">
+        <label for="hornL">Left horn extension</label>
+        <div class="inp"><input id="hornL" type="text" inputmode="text" autocomplete="off" spellcheck="false"><span class="unit uL">in</span></div>
+      </div>
+      <div class="field" data-asym="1">
+        <label for="hornR">Right horn extension</label>
+        <div class="inp"><input id="hornR" type="text" inputmode="text" autocomplete="off" spellcheck="false"><span class="unit uL">in</span></div>
+      </div>
+      <div class="field">
+        <label for="depthTotal">Stool depth <i>total board</i></label>
+        <div class="inp"><input id="depthTotal" type="text" inputmode="text" autocomplete="off" spellcheck="false"><span class="unit uL">in</span></div>
+      </div>
+      <div class="field">
+        <label for="depthTongue">Tongue depth <i>drywall → sash</i></label>
+        <div class="inp"><input id="depthTongue" type="text" inputmode="text" autocomplete="off" spellcheck="false"><span class="unit uL">in</span></div>
+      </div>
+    </div>
+
+    <div id="pad" aria-label="Fraction shortcuts"></div>
+
+    <div class="toggle-row">
+      <input type="checkbox" id="asym">
+      <label for="asym" style="margin:0;font-size:13px;letter-spacing:0;text-transform:none;font-weight:500;color:var(--ink)">Asymmetric casings / horns <span style="color:var(--ink-3)">— old walls, unequal returns</span></label>
+    </div>
+
+    <div class="derived">
+      <div class="dhead">Worked out from the above <span class="chip calc">calculated</span></div>
+      <div class="dgrid">
+        <div class="dcell">
+          <div class="dk">Finished opening</div>
+          <div><span class="out" id="dFinished">—</span></div>
+          <div class="dn">between the jamb faces — the reveal datum</div>
+        </div>
+        <div class="dcell">
+          <div class="dk">Rough opening</div>
+          <div><span class="out" id="dRough">—</span></div>
+          <div class="dn">what the tongue has to fill</div>
+        </div>
+        <div class="dcell span" id="dTongueCell">
+          <div class="dk">Tongue width
+            <button type="button" class="ovr" id="btnOverride">override</button>
+          </div>
+          <div id="tongueDerived"><span class="out" id="oTongueDerived">—</span></div>
+          <div class="inp" id="tongueInp" style="display:none"><input id="wTongue" type="text" inputmode="text" autocomplete="off" spellcheck="false"><span class="unit uL">in</span></div>
+          <div class="dn" id="tongueNote"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div id="alerts"></div>
+
+<section id="results">
+  <div class="sechead"><h2>Cut dimensions</h2><span class="hint" id="hintRound">rounded to 1/16"</span></div>
+  <div class="hero">
+    <div class="k">Total stool length — cut the board to this</div>
+    <div class="v"><span class="out" id="oTotal">—</span></div>
+    <div class="dec" id="oTotalDec"></div>
+  </div>
+  <div class="rows">
+    <div class="cell cut">
+      <div class="k">Left notch</div>
+      <div><span class="out" id="oNotchL">—</span></div>
+      <div class="n" id="nNotchL">in from the left end</div>
+    </div>
+    <div class="cell cut">
+      <div class="k">Right notch</div>
+      <div><span class="out" id="oNotchR">—</span></div>
+      <div class="n" id="nNotchR">in from the right end</div>
+    </div>
+    <div class="cell mark">
+      <div class="k">Tongue width</div>
+      <div><span class="out" id="oTongueW">—</span></div>
+      <div class="n">as measured — runs under the extension jambs</div>
+    </div>
+    <div class="cell mark">
+      <div class="k">Notch / tongue depth</div>
+      <div><span class="out" id="oNotchD">—</span></div>
+      <div class="n">in from the back edge</div>
+    </div>
+    <div class="cell">
+      <div class="k">Front overhang</div>
+      <div><span class="out" id="oFront">—</span></div>
+      <div class="n">past the drywall, into the room</div>
+    </div>
+    <div class="cell">
+      <div class="k">Base casing width</div>
+      <div><span class="out" id="oBase">—</span></div>
+      <div class="n" id="nBase">outside of casing to outside of casing</div>
+    </div>
+    <div class="cell">
+      <div class="k">Finished opening</div>
+      <div><span class="out" id="oFinished">—</span></div>
+      <div class="n">between the jamb faces — the reveal datum</div>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="sechead"><h2>Blueprint — plan view</h2><span class="hint">back edge up</span></div>
+  <div id="plan"></div>
+  <div class="legend">
+    <span><i class="sw tongue"></i> <span id="legendTongue">Tongue — fits the rough opening</span></span>
+    <span><i class="sw horn"></i> Horn / finished face</span>
+    <span><i class="sw waste"></i> Waste — cut away</span>
+  </div>
+</section>
+
+<section>
+  <div class="sechead"><h2>Cut sequence</h2></div>
+  <div class="body"><ol class="steps" id="steps"></ol></div>
+  <div class="actions">
+    <button type="button" id="btnCopy">Copy cut list</button>
+    <button type="button" id="btnPrint">Print sheet</button>
+    <button type="button" id="btnReset">Reset defaults</button>
+    <textarea id="copyOut" rows="9" readonly></textarea>
+  </div>
+</section>
+
+<footer>Measure twice. This sheet rounds to the nearest 1/16" — always dry-fit the tongue before nailing.</footer>
+<p style="text-align:center;padding:14px 0 0"><a href="index.html" style="font-family:ui-monospace,Menlo,monospace;font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:#1F5673;text-decoration:none">&larr; All sheets</a></p>
+
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  var IDS = ['wOutside','wTop','wJamb','reveal','casing','casingL','casingR','jambT','wTongue','horn','hornL','hornR','depthTotal','depthTongue'];
+
+  var DEFAULTS_IN = {
+    wOutside:'39 3/8', wTop:'39 3/8', wJamb:'32',
+    reveal:'3/16', casing:'3 1/2', casingL:'3 1/2', casingR:'3 1/2',
+    jambT:'3/4', wTongue:'33 1/2', horn:'3/4', hornL:'3/4', hornR:'3/4',
+    depthTotal:'5 1/2', depthTongue:'1 1/4'
+  };
+
+  var state = { unit:'in', method:'outside', asym:false, jmode:'finished', tmode:'derived' };
+
+  /* ---------------- parsing / formatting ---------------- */
+
+  function parseInches(raw){
+    if(raw===null||raw===undefined) return NaN;
+    var s = String(raw).trim().toLowerCase();
+    if(!s) return NaN;
+    s = s.replace(/[“”"]/g,' ').replace(/[‘’]/g,"'").replace(/,/g,'');
+    s = s.replace(/\bin\b|\binch(es)?\b|\bft\b|\bfeet\b|\bfoot\b/g,function(m){
+      return (m==='ft'||m==='feet'||m==='foot') ? "'" : ' ';
+    });
+    s = s.replace(/-/g,' ').replace(/\s+/g,' ').trim();
+    if(!s) return NaN;
+    var total = 0;
+    var fm = s.match(/^(\d+(?:\.\d+)?)\s*'\s*/);
+    if(fm){ total += parseFloat(fm[1])*12; s = s.slice(fm[0].length).trim(); if(!s) return total; }
+    var m = s.match(/^(\d+(?:\.\d+)?)?\s*(?:(\d+)\s*\/\s*(\d+))?$/);
+    if(!m) return NaN;
+    if(m[1]===undefined && m[2]===undefined) return NaN;
+    if(m[1]!==undefined) total += parseFloat(m[1]);
+    if(m[2]!==undefined && m[3]!==undefined){
+      var den = parseInt(m[3],10);
+      if(!den) return NaN;
+      total += parseInt(m[2],10)/den;
+    }
+    return isFinite(total) ? total : NaN;
+  }
+
+  function parseMm(raw){
+    if(raw===null||raw===undefined) return NaN;
+    var s = String(raw).trim().toLowerCase().replace(/mm/g,'').replace(/,/g,'').trim();
+    if(!s) return NaN;
+    if(!/^\d*\.?\d+$/.test(s)) return NaN;
+    var v = parseFloat(s);
+    return isFinite(v) ? v : NaN;
+  }
+
+  function parseVal(raw){ return state.unit==='in' ? parseInches(raw) : parseMm(raw); }
+  function snap(v){ return state.unit==='in' ? Math.round(v*16)/16 : Math.round(v); }
+
+  /* returns {whole, num, den, neg} for inch display */
+  function inchParts(v){
+    var neg = v < 0;
+    var s = Math.round(Math.abs(v)*16);
+    var whole = Math.floor(s/16);
+    var num = s%16, den = 16;
+    while(num>0 && num%2===0){ num/=2; den/=2; }
+    return {whole:whole, num:num, den:den, neg:neg};
+  }
+
+  /* plain text, for inputs and clipboard */
+  function fmtPlain(v){
+    if(!isFinite(v)) return '';
+    if(state.unit==='mm') return String(Math.round(v));
+    var p = inchParts(v);
+    var out;
+    if(p.num===0) out = String(p.whole);
+    else if(p.whole===0) out = p.num+'/'+p.den;
+    else out = p.whole+' '+p.num+'/'+p.den;
+    return (p.neg?'-':'')+out;
+  }
+  function fmtTape(v){ return fmtPlain(v) + (state.unit==='in' ? '"' : ' mm'); }
+
+  /* rich HTML with stacked fraction */
+  function fmtHTML(v){
+    if(!isFinite(v)) return '—';
+    if(state.unit==='mm'){
+      return String(Math.round(v))+'<span class="u">mm</span>';
+    }
+    var p = inchParts(v);
+    var h = (p.neg?'-':'');
+    if(p.num===0){ h += p.whole; }
+    else if(p.whole===0){ h += '<span class="f"><i>'+p.num+'</i><i>'+p.den+'</i></span>'; }
+    else { h += p.whole+'<span class="f"><i>'+p.num+'</i><i>'+p.den+'</i></span>'; }
+    return h+'<span class="u">"</span>';
+  }
+
+  function el(id){ return document.getElementById(id); }
+
+  /* ---------------- session persistence ----------------
+     Everything typed survives an app switch, a phone lock, or a reboot.
+     Wrapped in try/catch: private browsing and blocked site data both throw,
+     and the tool has to keep working when they do. */
+
+  var LSKEY = 'digital-scribe.stool.v2';
+
+  function saveState(){
+    try{
+      var d = { u:state.unit, m:state.method, a:state.asym, j:state.jmode, t:state.tmode, v:{} };
+      for(var i=0;i<IDS.length;i++) d.v[IDS[i]] = el(IDS[i]).value;
+      localStorage.setItem(LSKEY, JSON.stringify(d));
+    }catch(e){}
+  }
+
+  function loadState(){
+    try{
+      var raw = localStorage.getItem(LSKEY);
+      if(!raw) return false;
+      var d = JSON.parse(raw);
+      if(!d || !d.v) return false;
+      if(d.u === 'in' || d.u === 'mm') state.unit = d.u;
+      if(d.m) state.method = d.m;
+      if(d.j) state.jmode = d.j;
+      if(d.t) state.tmode = d.t;
+      state.asym = !!d.a;
+      for(var i=0;i<IDS.length;i++){
+        if(typeof d.v[IDS[i]] === 'string') el(IDS[i]).value = d.v[IDS[i]];
+      }
+      var ms = document.querySelectorAll('input[name="method"]');
+      for(var a=0;a<ms.length;a++) ms[a].checked = (ms[a].value === state.method);
+      var jm = document.querySelectorAll('input[name="jmode"]');
+      for(var b=0;b<jm.length;b++) jm[b].checked = (jm[b].value === state.jmode);
+      el('asym').checked = state.asym;
+      syncUnitUI();
+      return true;
+    }catch(e){ return false; }
+  }
+
+  function clearState(){ try{ localStorage.removeItem(LSKEY); }catch(e){} }
+
+  /* ---------------- computation ---------------- */
+
+  function compute(){
+    var v = {};
+    for(var i=0;i<IDS.length;i++){ v[IDS[i]] = parseVal(el(IDS[i]).value); }
+
+    var errors = [], warns = [];
+    var asym = state.asym;
+    var wcL = asym ? v.casingL : v.casing;
+    var wcR = asym ? v.casingR : v.casing;
+    var ehL = asym ? v.hornL : v.horn;
+    var ehR = asym ? v.hornR : v.horn;
+
+    function need(val,label){ if(!isFinite(val)){ errors.push('Enter a valid number for “'+label+'”.'); return false; } return true; }
+    function nonNeg(val,label){ if(isFinite(val) && val<0){ errors.push('“'+label+'” can’t be negative.'); } }
+
+    var wBase = NaN;
+    if(state.method==='outside'){
+      if(need(v.wOutside,'Casing to casing width')) wBase = v.wOutside;
+    } else if(state.method==='top'){
+      if(need(v.wTop,'Head casing length')) wBase = v.wTop;
+      warns.push({t:'Miter assumption',m:'The head casing is mapped 1:1 to the outside casing width, which only holds for a square-cut or 45° picture-frame head. If the head is a craftsman cap that overhangs the legs, subtract the overhang from both ends first, or switch to “Casing to casing”.'});
+    } else {
+      var okJ = need(v.wJamb,'Measured opening width');
+      var okR = need(v.reveal,'Reveal');
+      var okT = (state.jmode==='rough') ? need(v.jambT,'Extension jamb thickness') : true;
+      var okC = asym ? (need(v.casingL,'Left casing width') && need(v.casingR,'Right casing width')) : need(v.casing,'Side casing width');
+      if(okJ && okR && okC && okT){
+        /* the reveal is set off the FINISHED opening — between the extension jamb
+           faces. A rough-opening measurement loses two jamb thicknesses first. */
+        var finishedIn = (state.jmode==='rough') ? (v.wJamb - 2*v.jambT) : v.wJamb;
+        if(finishedIn <= 0){
+          errors.push('Two jamb thicknesses of '+fmtTape(v.jambT)+' eat the whole '+fmtTape(v.wJamb)+' rough opening. Check the thickness.');
+        }
+        wBase = finishedIn + 2*v.reveal + wcL + wcR;
+      }
+    }
+
+    if(asym){ need(v.casingL,'Left casing width'); need(v.casingR,'Right casing width'); need(v.hornL,'Left horn extension'); need(v.hornR,'Right horn extension'); }
+    else { need(v.casing,'Side casing width'); need(v.horn,'Horn extension'); }
+    need(v.reveal,'Reveal');
+    need(v.jambT,'Extension jamb thickness');
+    if(state.tmode==='measured') need(v.wTongue,'Tongue width');
+    need(v.depthTotal,'Stool depth');
+    need(v.depthTongue,'Tongue depth');
+
+    nonNeg(ehL,'Horn extension'); nonNeg(ehR,'Horn extension');
+    nonNeg(wcL,'Casing width'); nonNeg(wcR,'Casing width');
+    if(isFinite(v.depthTotal) && v.depthTotal<=0) errors.push('Stool depth must be greater than zero.');
+    if(isFinite(v.depthTongue) && v.depthTongue<0) errors.push('Tongue depth can’t be negative.');
+    if(isFinite(v.depthTotal) && isFinite(v.depthTongue) && v.depthTongue >= v.depthTotal){
+      errors.push('Tongue depth must be less than the total stool depth — there’d be nothing left to project into the room.');
+    }
+
+    if(errors.length) return {ok:false, errors:errors, warns:warns};
+
+    /* exact values.
+       Two different openings are in play:
+         finished = between the extension jamb faces — what the REVEAL is set off
+         rough    = finished + two jamb thicknesses — what the TONGUE slides into
+       The tongue sits below the side extension jambs, so it is sized to the rough
+       opening. The notches are what is left over, split either side of centre. */
+    var wTotal   = wBase + ehL + ehR;
+    var finished = wBase - wcL - wcR - 2*v.reveal;
+    var roughCalc = finished + 2*v.jambT;
+    var tongueW  = (state.tmode==='derived') ? roughCalc : v.wTongue;
+    var offset  = (ehL - ehR)/2 + (wcL - wcR)/2;   /* opening centre vs board centre */
+    var notchL  = (wTotal - tongueW)/2 + offset;
+    var notchR  = wTotal - tongueW - notchL;
+    var dNotch  = v.depthTongue;
+    var oFront  = v.depthTotal - v.depthTongue;
+    var wJamb   = finished;   /* finished opening, between the jamb faces */
+
+    if(tongueW <= 0){
+      errors.push('Tongue width must be greater than zero.');
+    }
+    if(tongueW >= wTotal){
+      errors.push('Tongue width ('+fmtTape(tongueW)+') is wider than the whole board ('+fmtTape(wTotal)+') — there is no horn left. Re-check the rough opening measurement.');
+    }
+    if(notchL < 0 || notchR < 0){
+      errors.push('The tongue runs past the '+(notchL<0?'left':'right')+' horn tip. Either the rough opening is wider than the trim allows for, or the casing / horn numbers are off.');
+    }
+    if(errors.length) return {ok:false, errors:errors, warns:warns};
+
+    /* snap to tape; keep the tongue exact and let the notches absorb the remainder */
+    var R = {
+      wBase: snap(wBase),
+      wTotal: snap(wTotal),
+      tongueW: snap(tongueW),
+      dNotch: snap(dNotch),
+      dTotal: snap(v.depthTotal),
+      wJamb: snap(wJamb),
+      roughCalc: snap(roughCalc),
+      jambT: v.jambT,
+      notchL: 0, notchR: 0, oFront: 0
+    };
+    R.notchL = snap((R.wTotal - R.tongueW)/2 + offset);
+    R.notchR = R.wTotal - R.tongueW - R.notchL;
+    R.oFront = R.dTotal - R.dNotch;
+
+    if(isFinite(wJamb) && tongueW <= wJamb){
+      warns.push({t:'Tongue too narrow',m:'The tongue ('+fmtTape(tongueW)+') is no wider than the finished opening ('+fmtTape(wJamb)+'). It has to run past the jamb faces so the extension jambs land on top of it — the opening math says '+fmtTape(roughCalc)+'.'});
+    } else if(state.tmode==='measured' && isFinite(roughCalc) && Math.abs(tongueW - roughCalc) > (state.unit==='in'?0.5:13)){
+      var d = tongueW - roughCalc;
+      warns.push({t:'Tongue vs. opening math',m:'You measured '+fmtTape(tongueW)+', but finished opening + two '+fmtTape(v.jambT)+' jambs comes to '+fmtTape(roughCalc)+' — '+fmtTape(Math.abs(d))+' '+(d>0?'wider':'narrower')+'. Shim gaps explain a little of that; half an inch or more means one of the two measurements is off.'});
+    }
+    if(R.notchL > ehL + wcL || R.notchR > ehR + wcR){
+      warns.push({t:'Shoulder will show',m:'A notch shoulder lands inboard of the casing, so the tongue is narrower than the trim opening and the joint will be visible at the reveal.'});
+    }
+    if(R.notchL < ehL || R.notchR < ehR){
+      warns.push({t:'Shoulder past the casing',m:'A notch shoulder falls outside the casing entirely — the tongue is wider than the outside of the trim. Check the rough opening against the casing-to-casing width.'});
+    }
+
+    if(oFront < (state.unit==='in' ? 0.75 : 19)){
+      warns.push({t:'Thin front overhang',m:'Only '+fmtTape(R.oFront)+' of stool projects past the drywall. Most stools show 3/4"–1 1/4" plus the apron reveal — double-check the tongue depth.'});
+    }
+    if(ehL===0 && ehR===0){
+      warns.push({t:'No horns',m:'Horn extension is zero, so the stool dies flush with the outside of the casing. That is a deliberate look, not a typo, right?'});
+    }
+    if(state.method==='jamb' && isFinite(v.reveal) && v.reveal > (state.unit==='in'?0.5:13)){
+      warns.push({t:'Large reveal',m:'A reveal of '+fmtTape(v.reveal)+' per side is unusual — 3/16" is standard, 1/4" is common on wide stock.'});
+    }
+
+    R.ok = true; R.errors = []; R.warns = warns;
+    R.exact = {wTotal:wTotal, tongueW:tongueW, notchL:notchL, notchR:notchR, oFront:oFront, dTotal:v.depthTotal, dNotch:dNotch, wJamb:wJamb, roughCalc:roughCalc};
+    return R;
+  }
+
+  /* ---------------- SVG blueprint ---------------- */
+
+  var lastResult = null;
+
+  function esc(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;'); }
+
+  function drawPlan(r){
+    var host = el('plan');
+    if(!r || !r.ok){ host.innerHTML = '<div style="padding:26px 12px;text-align:center;color:var(--ink-3);font-size:13px">The blueprint appears once every measurement checks out.</div>'; el('tbScale').textContent='—'; return; }
+
+    var W = Math.max(260, host.clientWidth || 340);
+    var small = W < 470;
+    var F  = small ? 10 : 12;
+    var mL = small ? 56 : 74;
+    var mR = small ? 46 : 60;
+    var mT = small ? 50 : 62;
+    var mB = small ? 44 : 52;
+
+    var dw = W - mL - mR;
+    var scale = dw / r.wTotal;
+    var dh = r.dTotal * scale;
+    var H = dh + mT + mB;
+
+    function X(x){ return mL + x*scale; }
+    function Y(y){ return mT + y*scale; }
+    function n(v){ return Math.round(v*100)/100; }
+
+    var nL = r.notchL, nR = r.notchR, dN = r.dNotch, wT = r.wTotal, dT = r.dTotal;
+    var s = [];
+
+    s.push('<svg viewBox="0 0 '+n(W)+' '+n(H)+'" width="'+n(W)+'" height="'+n(H)+'" xmlns="http://www.w3.org/2000/svg" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" role="img" aria-label="Top-down cutting diagram of the window stool">');
+    s.push('<defs>'
+      +'<marker id="ar" markerWidth="9" markerHeight="9" refX="8.5" refY="4.5" orient="auto-start-reverse" markerUnits="userSpaceOnUse"><path d="M0.5,1 L8.5,4.5 L0.5,8 Z" fill="#1F5673"/></marker>'
+      +'<pattern id="hatch" width="7" height="7" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><line x1="0" y1="0" x2="0" y2="7" stroke="#C8412A" stroke-width="1.4" opacity="0.55"/></pattern>'
+      +'</defs>');
+
+    /* raw blank outline */
+    s.push('<rect x="'+n(X(0))+'" y="'+n(Y(0))+'" width="'+n(wT*scale)+'" height="'+n(dT*scale)+'" fill="none" stroke="#7C8286" stroke-width="1" stroke-dasharray="2 3"/>');
+
+    /* finished shape */
+    var pts = [
+      [X(nL),Y(0)],[X(wT-nR),Y(0)],[X(wT-nR),Y(dN)],[X(wT),Y(dN)],
+      [X(wT),Y(dT)],[X(0),Y(dT)],[X(0),Y(dN)],[X(nL),Y(dN)]
+    ].map(function(p){ return n(p[0])+','+n(p[1]); }).join(' ');
+    s.push('<polygon points="'+pts+'" fill="#FFFFFF" stroke="#16181A" stroke-width="2" stroke-linejoin="miter"/>');
+
+    /* tongue tint */
+    s.push('<rect x="'+n(X(nL))+'" y="'+n(Y(0))+'" width="'+n((wT-nL-nR)*scale)+'" height="'+n(dN*scale)+'" fill="rgba(228,178,0,0.28)" stroke="none"/>');
+    s.push('<line x1="'+n(X(nL))+'" y1="'+n(Y(dN))+'" x2="'+n(X(wT-nR))+'" y2="'+n(Y(dN))+'" stroke="#16181A" stroke-width="1" stroke-dasharray="4 3"/>');
+
+    /* waste blocks */
+    function waste(x,w){
+      s.push('<rect x="'+n(X(x))+'" y="'+n(Y(0))+'" width="'+n(w*scale)+'" height="'+n(dN*scale)+'" fill="url(#hatch)" stroke="#C8412A" stroke-width="1.4" stroke-dasharray="5 3"/>');
+    }
+    waste(0,nL); waste(wT-nR,nR);
+
+    /* interior labels when there's room */
+    function label(cx,cy,txt,col,size){
+      s.push('<text x="'+n(cx)+'" y="'+n(cy)+'" font-size="'+size+'" letter-spacing="1.4" text-anchor="middle" dominant-baseline="central" fill="'+col+'" paint-order="stroke" stroke="#FFFFFF" stroke-width="3.5">'+esc(txt)+'</text>');
+    }
+    if(dN*scale > 15 && (wT-nL-nR)*scale > 60) label(X((nL+wT-nR)/2), Y(dN/2), 'TONGUE', '#6B5200', small?9:10);
+    if((dT-dN)*scale > 15) label(X(wT/2), Y(dN+(dT-dN)/2), 'HORN — FINISHED FACE', '#4A4F52', small?9:10);
+    if(dN*scale > 15 && nL*scale > 44) label(X(nL/2), Y(dN/2), 'WASTE', '#C8412A', small?9:10);
+    if(dN*scale > 15 && nR*scale > 44) label(X(wT-nR/2), Y(dN/2), 'WASTE', '#C8412A', small?9:10);
+
+    /* orientation notes */
+    s.push('<text x="'+n(X(wT/2))+'" y="'+n(mT-mT*0.72)+'" font-size="'+(small?9:10)+'" letter-spacing="2" text-anchor="middle" fill="#7C8286">WINDOW / BACK</text>');
+    s.push('<text x="'+n(X(wT/2))+'" y="'+n(Y(dT)+mB*0.78)+'" font-size="'+(small?9:10)+'" letter-spacing="2" text-anchor="middle" fill="#7C8286">ROOM / FRONT</text>');
+
+    /* ---- dimension helpers ---- */
+    var DIM = '#1F5673';
+    function ext(x1,y1,x2,y2){
+      s.push('<line x1="'+n(x1)+'" y1="'+n(y1)+'" x2="'+n(x2)+'" y2="'+n(y2)+'" stroke="'+DIM+'" stroke-width="0.75" opacity="0.65"/>');
+    }
+    function txt(x,y,t,anchor,rot){
+      var tr = rot ? ' transform="rotate('+rot+' '+n(x)+' '+n(y)+')"' : '';
+      s.push('<text x="'+n(x)+'" y="'+n(y)+'" font-size="'+F+'" text-anchor="'+(anchor||'middle')+'" dominant-baseline="central" fill="'+DIM+'" paint-order="stroke" stroke="#FBFBF9" stroke-width="3.5"'+tr+'>'+esc(t)+'</text>');
+    }
+    function dimH(xa,xb,ypx,text,tier){
+      var pxa = X(xa), pxb = X(xb), span = pxb-pxa;
+      var need = text.length*F*0.6 + 8;
+      if(span >= need){
+        s.push('<line x1="'+n(pxa)+'" y1="'+n(ypx)+'" x2="'+n(pxb)+'" y2="'+n(ypx)+'" stroke="'+DIM+'" stroke-width="1" marker-start="url(#ar)" marker-end="url(#ar)"/>');
+        txt((pxa+pxb)/2, ypx-F*0.85, text);
+      } else {
+        s.push('<line x1="'+n(pxa-14)+'" y1="'+n(ypx)+'" x2="'+n(pxa)+'" y2="'+n(ypx)+'" stroke="'+DIM+'" stroke-width="1" marker-start="url(#ar)"/>');
+        s.push('<line x1="'+n(pxb)+'" y1="'+n(ypx)+'" x2="'+n(pxb+14)+'" y2="'+n(ypx)+'" stroke="'+DIM+'" stroke-width="1" marker-end="url(#ar)"/>');
+        txt((pxa+pxb)/2, ypx-F*(tier?2.1:1.0), text);
+      }
+    }
+    function dimV(ya,yb,xpx,text,side){
+      var pya = Y(ya), pyb = Y(yb), span = pyb-pya;
+      if(span >= F*2.4){
+        s.push('<line x1="'+n(xpx)+'" y1="'+n(pya)+'" x2="'+n(xpx)+'" y2="'+n(pyb)+'" stroke="'+DIM+'" stroke-width="1" marker-start="url(#ar)" marker-end="url(#ar)"/>');
+      } else {
+        s.push('<line x1="'+n(xpx)+'" y1="'+n(pya-13)+'" x2="'+n(xpx)+'" y2="'+n(pya)+'" stroke="'+DIM+'" stroke-width="1" marker-start="url(#ar)"/>');
+        s.push('<line x1="'+n(xpx)+'" y1="'+n(pyb)+'" x2="'+n(xpx)+'" y2="'+n(pyb+13)+'" stroke="'+DIM+'" stroke-width="1" marker-end="url(#ar)"/>');
+      }
+      var tx = side==='right' ? xpx + F + 2 : xpx - 3;
+      txt(tx, (pya+pyb)/2, text, 'middle', -90);
+    }
+
+    /* top dimension string: notch / tongue / notch */
+    var yTop = mT - (small?18:22);
+    ext(X(0), Y(0), X(0), yTop-6);
+    ext(X(nL), Y(0), X(nL), yTop-6);
+    ext(X(wT-nR), Y(0), X(wT-nR), yTop-6);
+    ext(X(wT), Y(0), X(wT), yTop-6);
+    dimH(0, nL, yTop, fmtPlain(nL), true);
+    dimH(nL, wT-nR, yTop, fmtPlain(r.tongueW), false);
+    dimH(wT-nR, wT, yTop, fmtPlain(nR), true);
+
+    /* bottom: overall */
+    var yBot = Y(dT) + (small?20:24);
+    ext(X(0), Y(dT), X(0), yBot+6);
+    ext(X(wT), Y(dT), X(wT), yBot+6);
+    s.push('<line x1="'+n(X(0))+'" y1="'+n(yBot)+'" x2="'+n(X(wT))+'" y2="'+n(yBot)+'" stroke="'+DIM+'" stroke-width="1" marker-start="url(#ar)" marker-end="url(#ar)"/>');
+    txt(X(wT/2), yBot - F*0.9, fmtPlain(wT)+' overall');
+
+    /* left: notch depth + total depth */
+    var xd1 = mL - (small?16:20);
+    var xd2 = mL - (small?38:46);
+    ext(X(0), Y(dN), xd1-6, Y(dN));
+    ext(X(0), Y(0), xd2-6, Y(0));
+    ext(X(0), Y(dT), xd2-6, Y(dT));
+    dimV(0, dN, xd1, fmtPlain(dN), 'left');
+    dimV(0, dT, xd2, fmtPlain(dT), 'left');
+
+    /* right: front overhang */
+    var xr = X(wT) + (small?18:24);
+    ext(X(wT), Y(dN), xr+6, Y(dN));
+    ext(X(wT), Y(dT), xr+6, Y(dT));
+    dimV(dN, dT, xr, fmtPlain(r.oFront), 'right');
+
+    s.push('</svg>');
+    host.innerHTML = s.join('');
+
+    var ratio = state.unit==='in' ? (1/scale) : (1/scale);
+    el('tbScale').textContent = '1 : ' + (Math.round(ratio*10)/10);
+  }
+
+  /* ---------------- render ---------------- */
+
+  function alertsHTML(r){
+    var h = '';
+    if(r.errors && r.errors.length){
+      h += '<div class="banner err"><b>Check the inputs</b>'+r.errors.map(esc).join('<br>')+'</div>';
+    }
+    if(r.warns){
+      for(var i=0;i<r.warns.length;i++){
+        h += '<div class="banner warn"><b>'+esc(r.warns[i].t)+'</b>'+esc(r.warns[i].m)+'</div>';
+      }
+    }
+    return h;
+  }
+
+  function stepsHTML(r){
+    var u = state.unit==='in' ? '"' : ' mm';
+    function T(v){ return '<b>'+esc(fmtPlain(v))+u+'</b>'; }
+    var li = [
+      'Crosscut the stool blank to '+T(r.wTotal)+' long. Stock is '+T(r.dTotal)+' deep front to back.',
+      'Lay the board face up, back edge away from you. From the back edge, gauge a line '+T(r.dNotch)+' in, all the way across — that is the notch depth and the tongue depth.',
+      'From the left end, mark in '+T(r.notchL)+'. From the right end, mark in '+T(r.notchR)+'. Square those marks back to the back edge.',
+      'Remove both back corner blocks. The remaining tongue measures '+T(r.tongueW)+' wide and '+T(r.dNotch)+' deep — sized to the rough opening, so it slides in below the '+T(r.jambT)+' extension jambs rather than butting their faces.',
+      'Dry-fit: the tongue enters the rough opening and the two shoulders bear on the drywall either side, hidden behind the casing legs. '+T(r.oFront)+' of stool projects into the room.',
+      'Scribe the shoulders to the wall if the drywall is out of plane, then ease the front edge and both horn ends before finishing.'
+    ];
+    return li.map(function(x){ return '<li>'+x+'</li>'; }).join('');
+  }
+
+  function copyText(r){
+    var u = state.unit==='in' ? '"' : ' mm';
+    function T(v){ return fmtPlain(v)+u; }
+    return [
+      'WINDOW STOOL — CUT LIST',
+      'Overall length ........ '+T(r.wTotal),
+      'Stock depth ........... '+T(r.dTotal),
+      'Notch depth ........... '+T(r.dNotch)+'  (from back edge)',
+      'Left notch width ...... '+T(r.notchL)+'  (from left end)',
+      'Right notch width ..... '+T(r.notchR)+'  (from right end)',
+      'Tongue width .......... '+T(r.tongueW)+'  (rough opening)',
+      'Front overhang ........ '+T(r.oFront),
+      'Casing to casing ...... '+T(r.wBase),
+      'Finished opening ...... '+T(r.wJamb)+'  (between jamb faces)',
+      'Rough opening (calc) .. '+T(r.roughCalc)+'  (+2 x '+T(r.jambT)+' jambs)'
+    ].join('\n');
+  }
+
+  function render(){
+    /* field visibility */
+    var fields = document.querySelectorAll('.field[data-show], .field[data-sym], .field[data-asym]');
+    for(var i=0;i<fields.length;i++){
+      var f = fields[i], show = true;
+      if(f.hasAttribute('data-show')) show = (f.getAttribute('data-show') === state.method);
+      if(f.hasAttribute('data-sym')) show = !state.asym;
+      if(f.hasAttribute('data-asym')) show = state.asym;
+      f.style.display = show ? '' : 'none';
+    }
+    el('nBase').textContent = state.method==='jamb'
+      ? 'finished opening + 2 reveals + both casings'
+      : 'outside of casing to outside of casing';
+    el('legendTongue').textContent = 'Tongue — fits the rough opening';
+
+    var derived = state.tmode==='derived';
+    el('tongueInp').style.display = derived ? 'none' : '';
+    el('tongueDerived').style.display = derived ? '' : 'none';
+    saveState();
+    el('btnOverride').setAttribute('aria-pressed', derived ? 'false' : 'true');
+    el('btnOverride').textContent = derived ? 'override' : 'use calculated';
+    el('dTongueCell').querySelector('.dk').firstChild.nodeValue =
+      derived ? 'Tongue width ' : 'Tongue width — overridden ';
+
+    var r = compute();
+    lastResult = r;
+    el('alerts').innerHTML = alertsHTML(r);
+
+    /* jamb-method note: the conversion between the two openings */
+    var jn = el('jambNote');
+    jn.className = 'note';
+    if(state.method !== 'jamb'){ jn.textContent = ''; }
+    else if(r.ok){
+      jn.innerHTML = (state.jmode==='rough')
+        ? 'Less two ' + fmtTape(r.jambT) + ' jambs → finished opening <b>' + fmtTape(r.wJamb) + '</b>. The reveal is set off that.'
+        : 'Plus two ' + fmtTape(r.jambT) + ' jambs → rough opening <b>' + fmtTape(r.roughCalc) + '</b>. That is what the tongue fills.';
+    } else { jn.textContent = 'The reveal is set off the finished opening, not the framing.'; }
+
+    var outs = ['oTotal','oNotchL','oNotchR','oTongueW','oNotchD','oFront','oBase','oFinished'];
+    if(!r.ok){
+      for(var j=0;j<outs.length;j++) el(outs[j]).innerHTML = '—';
+      el('oTotalDec').textContent = '';
+      el('oTongueDerived').innerHTML = '—';
+      el('dFinished').innerHTML = '—';
+      el('dRough').innerHTML = '—';
+      el('tongueNote').className = 'dn';
+      el('tongueNote').textContent = derived
+        ? 'Finished opening + two jamb thicknesses.'
+        : 'The rough opening the tongue slides into, less a hair for fit.';
+      el('steps').innerHTML = '<li>Fill in the measurements above and the sequence writes itself.</li>';
+      drawPlan(null);
+      return;
+    }
+
+    el('dFinished').innerHTML = fmtHTML(r.wJamb);
+    el('dRough').innerHTML    = fmtHTML(r.roughCalc);
+
+    el('oTongueDerived').innerHTML = fmtHTML(r.tongueW);
+    var tn = el('tongueNote'), gap = r.tongueW - r.roughCalc;
+    if(derived){
+      tn.className = 'dn';
+      tn.innerHTML = (state.method==='jamb' && state.jmode==='rough')
+        ? 'Same as the rough opening you measured. Shave a hair if it binds on the shims.'
+        : 'Finished opening ' + fmtTape(r.wJamb) + ' + two ' + fmtTape(r.jambT) + ' jambs. Shave a hair if it binds on the shims.';
+    } else {
+      tn.className = (Math.abs(gap) > (state.unit==='in'?0.5:13)) ? 'dn flag' : 'dn';
+      tn.innerHTML = 'Calculated value is <b>' + fmtTape(r.roughCalc) + '</b>'
+        + (Math.abs(gap) < 1e-9 ? ' — your override matches it.'
+           : ' — your override is ' + fmtTape(Math.abs(gap)) + ' ' + (gap>0?'over':'under') + ' that.');
+    }
+
+    el('oTotal').innerHTML   = fmtHTML(r.wTotal);
+    el('oNotchL').innerHTML  = fmtHTML(r.notchL);
+    el('oNotchR').innerHTML  = fmtHTML(r.notchR);
+    el('oTongueW').innerHTML = fmtHTML(r.tongueW);
+    el('oNotchD').innerHTML  = fmtHTML(r.dNotch);
+    el('oFront').innerHTML   = fmtHTML(r.oFront);
+    el('oBase').innerHTML    = fmtHTML(r.wBase);
+    el('oFinished').innerHTML = fmtHTML(r.wJamb);
+    el('oTotalDec').textContent = state.unit==='in'
+      ? (Math.round(r.exact.wTotal*1000)/1000) + '" exact  ·  ' + (Math.round(r.exact.wTotal*25.4*10)/10) + ' mm'
+      : (Math.round(r.exact.wTotal*10)/10) + ' mm exact  ·  ' + (Math.round(r.exact.wTotal/25.4*1000)/1000) + '"';
+
+    el('steps').innerHTML = stepsHTML(r);
+    drawPlan(r);
+  }
+
+  /* ---------------- fraction pad ---------------- */
+
+  var FRACS = ['1/16','1/8','3/16','1/4','5/16','3/8','7/16','1/2','9/16','5/8','11/16','3/4','13/16','7/8','15/16'];
+  var pad = el('pad');
+  var focused = null;
+
+  function buildPad(){
+    var h = '';
+    for(var i=0;i<FRACS.length;i++) h += '<button type="button" data-f="'+FRACS[i]+'">'+FRACS[i]+'</button>';
+    h += '<button type="button" class="clr" data-f="__clear">clear</button>';
+    pad.innerHTML = h;
+  }
+  buildPad();
+
+  pad.addEventListener('pointerdown', function(e){ e.preventDefault(); });
+  pad.addEventListener('click', function(e){
+    var b = e.target.closest('button'); if(!b || !focused) return;
+    var f = b.getAttribute('data-f');
+    if(f === '__clear'){ focused.value = ''; }
+    else {
+      var base = focused.value.trim().replace(/\s*\d+\s*\/\s*\d+\s*$/,'').trim();
+      focused.value = base ? base+' '+f : f;
+    }
+    focused.focus();
+    render();
+  });
+
+  function padPlacement(input){
+    var wrap = input.closest('.field');
+    if(!wrap) return;
+    wrap.appendChild(pad);
+    pad.classList.add('on');
+  }
+
+  /* ---------------- wiring ---------------- */
+
+  function setDefaults(){
+    state.unit = 'in'; state.jmode = 'finished'; state.tmode = 'derived';
+    var jr = document.querySelectorAll('input[name="jmode"]');
+    for(var a=0;a<jr.length;a++) jr[a].checked = (jr[a].value === 'finished');
+    for(var i=0;i<IDS.length;i++) el(IDS[i]).value = DEFAULTS_IN[IDS[i]];
+    syncUnitUI();
+  }
+
+  function syncUnitUI(){
+    var isIn = state.unit==='in';
+    el('uIn').setAttribute('aria-pressed', isIn?'true':'false');
+    el('uMm').setAttribute('aria-pressed', isIn?'false':'true');
+    var us = document.querySelectorAll('.uL');
+    for(var i=0;i<us.length;i++) us[i].textContent = isIn ? 'in' : 'mm';
+    el('tbUnits').textContent = isIn ? 'inches' : 'millimetres';
+    el('tbRound').textContent = isIn ? '1/16"' : '1 mm';
+    el('hintRound').textContent = isIn ? 'rounded to 1/16"' : 'rounded to 1 mm';
+    pad.style.display = isIn ? '' : 'none';
+  }
+
+  function switchUnit(next){
+    if(next === state.unit) return;
+    var vals = {};
+    for(var i=0;i<IDS.length;i++) vals[IDS[i]] = parseVal(el(IDS[i]).value);
+    state.unit = next;
+    for(var j=0;j<IDS.length;j++){
+      var v = vals[IDS[j]];
+      if(!isFinite(v)){ el(IDS[j]).value = ''; continue; }
+      var conv = next==='mm' ? v*25.4 : v/25.4;
+      el(IDS[j]).value = fmtPlain(snap(conv));
+    }
+    syncUnitUI();
+    render();
+  }
+
+  for(var i=0;i<IDS.length;i++){
+    (function(id){
+      var input = el(id);
+      input.addEventListener('input', render);
+      input.addEventListener('focus', function(){
+        focused = input;
+        if(state.unit==='in') padPlacement(input);
+        input.select();
+      });
+      input.addEventListener('blur', function(){
+        setTimeout(function(){
+          if(document.activeElement !== input){ pad.classList.remove('on'); focused = null; }
+        }, 0);
+      });
+    })(IDS[i]);
+  }
+
+  var radios = document.querySelectorAll('input[name="method"]');
+  for(var k=0;k<radios.length;k++){
+    radios[k].addEventListener('change', function(e){ state.method = e.target.value; render(); });
+  }
+  var jRadios = document.querySelectorAll('input[name="jmode"]');
+  for(var jr=0;jr<jRadios.length;jr++){
+    jRadios[jr].addEventListener('change', function(e){ state.jmode = e.target.value; render(); });
+  }
+  el('btnOverride').addEventListener('click', function(){
+    if(state.tmode === 'derived'){
+      /* seed the box with the calculated value so it is an edit, not a blank */
+      if(lastResult && lastResult.ok) el('wTongue').value = fmtPlain(lastResult.tongueW);
+      state.tmode = 'measured';
+      render();
+      el('wTongue').focus();
+    } else {
+      state.tmode = 'derived';
+      render();
+    }
+  });
+  el('asym').addEventListener('change', function(e){
+    state.asym = e.target.checked;
+    if(state.asym){
+      var c = el('casing').value, h = el('horn').value;
+      if(!el('casingL').value) el('casingL').value = c;
+      if(!el('casingR').value) el('casingR').value = c;
+      if(!el('hornL').value)  el('hornL').value = h;
+      if(!el('hornR').value)  el('hornR').value = h;
+    }
+    render();
+  });
+
+  el('uIn').addEventListener('click', function(){ switchUnit('in'); });
+  el('uMm').addEventListener('click', function(){ switchUnit('mm'); });
+  el('btnPrint').addEventListener('click', function(){ window.print(); });
+  el('btnReset').addEventListener('click', function(){ clearState(); setDefaults(); render(); });
+  el('btnCopy').addEventListener('click', function(){
+    if(!lastResult || !lastResult.ok) return;
+    var t = copyText(lastResult);
+    var ta = el('copyOut');
+    function fallback(){
+      ta.style.display='block'; ta.value = t; ta.focus(); ta.select();
+      el('btnCopy').textContent = 'Select and copy';
+    }
+    if(navigator.clipboard && navigator.clipboard.writeText){
+      navigator.clipboard.writeText(t).then(function(){
+        el('btnCopy').textContent = 'Copied';
+        setTimeout(function(){ el('btnCopy').textContent = 'Copy cut list'; }, 1600);
+      }).catch(fallback);
+    } else fallback();
+  });
+
+  var rt = null;
+  window.addEventListener('resize', function(){
+    clearTimeout(rt);
+    rt = setTimeout(function(){ if(lastResult) drawPlan(lastResult); }, 120);
+  });
+
+  setDefaults();
+  loadState();
+  render();
+
+  /* iOS can suspend the page without firing unload — save on the way out too */
+  document.addEventListener('visibilitychange', function(){
+    if(document.visibilityState === 'hidden') saveState();
+  });
+  window.addEventListener('pagehide', saveState);
+})();
+</script>
+<script>
+if('serviceWorker' in navigator){
+  window.addEventListener('load', function(){
+    navigator.serviceWorker.register('sw.js', {scope:'./'}).catch(function(){});
+  });
+}
+</script>
+</body>
+</html>

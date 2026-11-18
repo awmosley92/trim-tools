@@ -1,0 +1,952 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="light">
+<meta name="robots" content="noindex, nofollow">
+<title>Digital Scribe — Reveal Finder</title>
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#E9EAE4">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Trim Tools">
+<link rel="apple-touch-icon" href="icons/icon-180.png">
+<link rel="icon" href="icons/icon-192.png">
+<style>
+  :root{
+    --ink:#16181A;
+    --ink-2:#4A4F52;
+    --ink-3:#7C8286;
+    --paper:#E9EAE4;
+    --card:#FBFBF9;
+    --rule:#C9CBC2;
+    --mark:#E4B200;
+    --cut:#C8412A;
+    --dim:#1F5673;
+    --good:#2E6B45;
+    --mono: ui-monospace, "SF Mono", SFMono-Regular, Menlo, Consolas, "Roboto Mono", monospace;
+    --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  }
+  *{box-sizing:border-box; -webkit-tap-highlight-color:transparent}
+  html,body{margin:0;padding:0}
+  body{background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:16px;line-height:1.4;
+    padding:0 0 env(safe-area-inset-bottom);-webkit-text-size-adjust:100%}
+  .wrap{max-width:780px;margin:0 auto;padding:0 12px 48px}
+
+  header{border-bottom:2px solid var(--ink);margin:0 0 16px;padding:18px 0 0}
+  h1{font-size:clamp(20px,6vw,30px);line-height:1;letter-spacing:-.02em;font-weight:800;text-transform:uppercase;margin:0 0 2px}
+  h1 em{font-style:normal;color:var(--ink-3);font-weight:500}
+  .tagline{font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-2);margin:0 0 12px}
+  .titleblock{display:flex;flex-wrap:wrap;border-top:1px solid var(--rule)}
+  .tb{flex:1 1 0;min-width:80px;padding:6px 8px 7px;border-right:1px solid var(--rule)}
+  .tb:last-child{border-right:0}
+  .tb b{display:block;font-size:9px;letter-spacing:.16em;text-transform:uppercase;color:var(--ink-3);font-weight:600}
+  .tb span{font-family:var(--mono);font-size:13px;font-variant-numeric:tabular-nums}
+
+  section{background:var(--card);border:1px solid var(--rule);margin:0 0 14px}
+  .sechead{display:flex;align-items:baseline;gap:8px;padding:9px 12px;border-bottom:1px solid var(--rule);background:#F2F2EE}
+  .sechead h2{margin:0;font-size:11px;font-weight:700;letter-spacing:.18em;text-transform:uppercase}
+  .sechead .hint{font-size:11px;color:var(--ink-3);margin-left:auto}
+  .body{padding:12px}
+
+  .switch{display:flex;border:1px solid var(--ink);width:max-content;margin-left:auto}
+  .switch button{font-family:var(--mono);font-size:12px;letter-spacing:.08em;text-transform:uppercase;
+    background:transparent;border:0;padding:5px 12px;cursor:pointer;color:var(--ink)}
+  .switch button[aria-pressed="true"]{background:var(--ink);color:var(--card)}
+
+  .grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  .grid.one{grid-template-columns:1fr}
+  @media (max-width:420px){.grid{grid-template-columns:1fr}}
+  .field{position:relative;min-width:0}
+  .field label{display:block;font-size:10px;letter-spacing:.13em;text-transform:uppercase;color:var(--ink-2);font-weight:650;margin:0 0 4px}
+  .field label i{font-style:normal;color:var(--ink-3);font-weight:500;letter-spacing:.02em;text-transform:none}
+  .inp{display:flex;align-items:stretch;border:1px solid var(--ink-3);background:#fff}
+  .inp:focus-within{border-color:var(--ink);outline:2px solid var(--mark);outline-offset:-1px}
+  .inp input{flex:1 1 auto;min-width:0;border:0;background:transparent;outline:0;
+    font-family:var(--mono);font-size:18px;font-variant-numeric:tabular-nums;padding:9px 8px;color:var(--ink)}
+  .inp .unit{flex:0 0 auto;display:flex;align-items:center;padding:0 9px;font-family:var(--mono);font-size:12px;color:var(--ink-3);border-left:1px solid #E4E5E0}
+
+  /* evidence blocks */
+  .ev{border:1px solid var(--rule);margin:0 0 10px;background:#fff}
+  .ev.on{border-color:var(--ink);box-shadow:inset 3px 0 0 var(--mark)}
+  .ev>.h{display:flex;gap:10px;align-items:flex-start;padding:10px 11px;cursor:pointer}
+  .ev>.h input{margin:2px 0 0;width:18px;height:18px;accent-color:var(--ink);flex:0 0 auto}
+  .ev .t{font-size:14px;font-weight:650;line-height:1.25}
+  .ev .s{font-size:12px;color:var(--ink-3);line-height:1.35;margin-top:2px}
+  .ev .f{padding:0 11px 12px;display:none}
+  .ev.on .f{display:block}
+
+  .toggle-row{display:flex;align-items:center;gap:9px;margin:12px 0 0;font-size:13px}
+  .toggle-row input{width:18px;height:18px;accent-color:var(--ink)}
+  .subhead{font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-3);font-weight:650;
+    margin:16px 0 7px;padding-top:10px;border-top:1px solid var(--rule)}
+
+  #pad{display:none;gap:4px;flex-wrap:wrap;margin-top:6px}
+  #pad.on{display:flex}
+  #pad button{font-family:var(--mono);font-size:12px;padding:7px 8px;min-width:38px;border:1px solid var(--rule);
+    background:#F4F4F0;color:var(--ink);cursor:pointer}
+  #pad button:active{background:var(--mark)}
+  #pad button.alt{color:var(--dim);border-color:var(--dim)}
+  #pad button.clr{color:var(--cut);border-color:var(--cut)}
+
+  .banner{padding:10px 12px;font-size:13px;line-height:1.35;border-left:4px solid}
+  .banner+.banner{margin-top:8px}
+  .banner.err{background:#FBEDEA;border-color:var(--cut);color:#7B2415}
+  .banner.warn{background:#FCF6E0;border-color:var(--mark);color:#5B4700}
+  .banner.ok{background:#EBF3EE;border-color:var(--good);color:#20502F}
+  .banner b{display:block;font-size:10px;letter-spacing:.14em;text-transform:uppercase;margin-bottom:2px}
+
+  .out{display:inline-flex;align-items:baseline;gap:.12em;font-family:var(--mono);
+    font-variant-numeric:tabular-nums;font-weight:600;letter-spacing:-.01em}
+  .out .fr{display:inline-flex;flex-direction:column;line-height:1;font-size:.44em;font-weight:600;
+    align-self:center;text-align:center;margin-left:.14em}
+  .out .fr i{font-style:normal;padding:0 .1em}
+  .out .fr i:first-child{border-bottom:1px solid currentColor;padding-bottom:.1em}
+  .out .fr i:last-child{padding-top:.1em}
+  .out .u{font-size:.42em;color:var(--ink-3);margin-left:.1em;align-self:flex-start}
+
+  .verdict{display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--rule)}
+  @media (max-width:420px){.verdict{grid-template-columns:1fr}}
+  .vc{background:var(--card);padding:14px 12px}
+  .vc .k{font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:var(--ink-2);font-weight:650}
+  .vc .out{font-size:36px;margin-top:2px}
+  .vc .n{font-family:var(--mono);font-size:11px;color:var(--ink-3);margin-top:3px;line-height:1.4}
+
+  table.src{width:100%;border-collapse:collapse;font-size:13px}
+  table.src th{font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-3);text-align:left;
+    font-weight:650;padding:0 8px 6px 0;border-bottom:1px solid var(--rule)}
+  table.src td{padding:8px 8px 8px 0;border-bottom:1px solid #ECEDE8;vertical-align:top}
+  table.src td.v{font-family:var(--mono);font-variant-numeric:tabular-nums;white-space:nowrap;font-weight:600}
+  table.src td.d{font-family:var(--mono);font-size:12px;color:var(--ink-3);white-space:nowrap}
+  table.src tr:last-child td{border-bottom:0}
+  .tag{display:inline-block;font-family:var(--mono);font-size:10px;padding:1px 5px;border:1px solid;letter-spacing:.04em}
+  .tag.ok{color:var(--good);border-color:var(--good)}
+  .tag.off{color:var(--cut);border-color:var(--cut)}
+
+  .modes{display:flex;flex-wrap:wrap;gap:6px;margin:0 0 12px}
+  .modes label{flex:1 1 auto;border:1px solid var(--rule);padding:8px 10px;font-size:12px;cursor:pointer;text-align:center;background:#fff}
+  .modes label:has(input:checked){border-color:var(--ink);background:var(--ink);color:var(--card)}
+  .modes input{position:absolute;opacity:0;pointer-events:none}
+
+  #detail{padding:8px 4px 4px;overflow:hidden}
+  #detail svg{display:block;width:100%;height:auto}
+  .legend{display:flex;flex-wrap:wrap;gap:12px;padding:8px 12px 11px;border-top:1px solid var(--rule);font-size:11px;color:var(--ink-2)}
+  .legend span{display:flex;align-items:center;gap:5px}
+  .sw{width:14px;height:10px;border:1px solid var(--ink);display:inline-block}
+  .sw.jamb{background:#EFE3C6}
+  .sw.reveal{background:rgba(228,178,0,.55)}
+  .sw.casing{background:#fff}
+  .sw.open{background:#DCDDD7}
+
+  .rows{display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--rule)}
+  @media (max-width:420px){.rows{grid-template-columns:1fr}}
+  .cell{background:var(--card);padding:11px 12px}
+  .cell .k{font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-2);font-weight:650}
+  .cell .out{font-size:22px;margin-top:1px}
+  .cell .n{font-size:11px;color:var(--ink-3);margin-top:1px;line-height:1.3}
+  .cell.mark{box-shadow:inset 3px 0 0 var(--mark)}
+
+  .actions{display:flex;gap:8px;padding:12px;border-top:1px solid var(--rule);flex-wrap:wrap}
+  .actions button{font-family:var(--sans);font-size:13px;font-weight:600;padding:10px 14px;border:1px solid var(--ink);
+    background:#fff;color:var(--ink);cursor:pointer}
+  .actions button:active{background:var(--ink);color:var(--card)}
+  #copyOut{width:100%;margin-top:8px;font-family:var(--mono);font-size:12px;padding:8px;border:1px solid var(--rule);display:none}
+  footer{font-size:11px;color:var(--ink-3);text-align:center;padding:4px 0 0;line-height:1.5}
+
+  @media print{body{background:#fff}.actions,#pad,footer{display:none}section{break-inside:avoid}}
+  @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header>
+  <h1>Digital Scribe <em>/ Reveal Finder</em></h1>
+  <p class="tagline">Back-calculate an unknown reveal from trim you're reusing</p>
+  <div class="titleblock">
+    <div class="tb"><b>Sheet</b><span>S-02</span></div>
+    <div class="tb"><b>Units</b><span id="tbUnits">inches</span></div>
+    <div class="tb"><b>Reveal</b><span id="tbRes">1/32"</span></div>
+    <div class="tb"><b>Layout</b><span id="tbLay">1/16"</span></div>
+  </div>
+</header>
+
+<section>
+  <div class="sechead">
+    <h2>The opening</h2>
+    <div class="switch" role="group" aria-label="Units">
+      <button type="button" id="uIn" aria-pressed="true">in</button>
+      <button type="button" id="uMm" aria-pressed="false">mm</button>
+    </div>
+  </div>
+  <div class="body">
+    <div class="grid">
+      <div class="field">
+        <label for="jw">Jamb opening width <i>face to face</i></label>
+        <div class="inp"><input id="jw" type="text" inputmode="text" autocomplete="off" spellcheck="false"><span class="unit uL">in</span></div>
+      </div>
+      <div class="field">
+        <label for="jh">Jamb opening height <i>stool top → head jamb</i></label>
+        <div class="inp"><input id="jh" type="text" inputmode="text" autocomplete="off" spellcheck="false"><span class="unit uL">in</span></div>
+      </div>
+      <div class="field" data-sym="1">
+        <label for="cw">Casing width</label>
+        <div class="inp"><input id="cw" type="text" inputmode="text" autocomplete="off" spellcheck="false"><span class="unit uL">in</span></div>
+      </div>
+      <div class="field" data-asym="1">
+        <label for="cwL">Left casing width</label>
+        <div class="inp"><input id="cwL" type="text" inputmode="text" autocomplete="off" spellcheck="false"><span class="unit uL">in</span></div>
+      </div>
+      <div class="field" data-asym="1">
+        <label for="cwR">Right casing width</label>
+        <div class="inp"><input id="cwR" type="text" inputmode="text" autocomplete="off" spellcheck="false"><span class="unit uL">in</span></div>
+      </div>
+      <div class="field">
+        <label for="jt">Jamb edge thickness <i>the strip you can reveal</i></label>
+        <div class="inp"><input id="jt" type="text" inputmode="text" autocomplete="off" spellcheck="false"><span class="unit uL">in</span></div>
+      </div>
+    </div>
+    <div class="toggle-row">
+      <input type="checkbox" id="asym">
+      <label for="asym" style="margin:0;font-size:13px;letter-spacing:0;text-transform:none;font-weight:500;color:var(--ink)">Left and right casings are different widths</label>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="sechead"><h2>Evidence</h2><span class="hint">tick what you can measure</span></div>
+  <div class="body">
+
+    <div class="ev" id="evW">
+      <label class="h"><input type="checkbox" id="onW">
+        <span><span class="t">Witness line on the jamb edge</span>
+        <span class="s">The unpainted, cleaner or differently-finished strip the old casing didn't cover. Most reliable evidence you have.</span></span>
+      </label>
+      <div class="f">
+        <div class="grid">
+          <div class="field"><label for="wL">Left strip</label>
+            <div class="inp"><input id="wL" type="text" inputmode="text" autocomplete="off" spellcheck="false"><span class="unit uL">in</span></div></div>
+          <div class="field"><label for="wR">Right strip</label>
+            <div class="inp"><input id="wR" type="text" inputmode="text" autocomplete="off" spellcheck="false"><span class="unit uL">in</span></div></div>
+          <div class="field"><label for="wH">Head strip</label>
+            <div class="inp"><input id="wH" type="text" inputmode="text" autocomplete="off" spellcheck="false"><span class="unit uL">in</span></div></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="ev" id="evSP">
+      <label class="h"><input type="checkbox" id="onSP">
+        <span><span class="t">Head casing — short point to short point</span>
+        <span class="s">Inside edge of the mitered head, tip to tip. Gives both side reveals with no casing width needed.</span></span>
+      </label>
+      <div class="f">
+        <div class="grid one"><div class="field"><label for="hSP">Head casing, inside edge</label>
+          <div class="inp"><input id="hSP" type="text" inputmode="text" autocomplete="off" spellcheck="false"><span class="unit uL">in</span></div></div></div>
+      </div>
+    </div>
+
+    <div class="ev" id="evLP">
+      <label class="h"><input type="checkbox" id="onLP">
+        <span><span class="t">Head casing — long point to long point</span>
+        <span class="s">Outside edge of the mitered head. Only valid for a 45° picture frame, not a craftsman cap with an overhang.</span></span>
+      </label>
+      <div class="f">
+        <div class="grid one"><div class="field"><label for="hLP">Head casing, outside edge</label>
+          <div class="inp"><input id="hLP" type="text" inputmode="text" autocomplete="off" spellcheck="false"><span class="unit uL">in</span></div></div></div>
+      </div>
+    </div>
+
+    <div class="ev" id="evLeg">
+      <label class="h"><input type="checkbox" id="onLeg">
+        <span><span class="t">Leg casing length</span>
+        <span class="s">Short point for a mitered leg, or overall length for a butted leg under a cap. Gives the head reveal.</span></span>
+      </label>
+      <div class="f">
+        <div class="grid one"><div class="field"><label for="legL">Leg casing, inside edge length</label>
+          <div class="inp"><input id="legL" type="text" inputmode="text" autocomplete="off" spellcheck="false"><span class="unit uL">in</span></div></div></div>
+      </div>
+    </div>
+
+    <div id="pad" aria-label="Fraction shortcuts"></div>
+  </div>
+</section>
+
+<div id="alerts"></div>
+
+<section>
+  <div class="sechead"><h2>Verdict</h2><span class="hint" id="modeHint">nearest standard</span></div>
+  <div class="body" style="padding-bottom:0">
+    <div class="modes">
+      <label><input type="radio" name="mode" value="std" checked>Nearest standard</label>
+      <label><input type="radio" name="mode" value="meas">As measured</label>
+      <label><input type="radio" name="mode" value="man">Set manually</label>
+    </div>
+    <div class="grid" id="manualRow" style="display:none;margin-bottom:12px">
+      <div class="field"><label for="manSide">Side reveal</label>
+        <div class="inp"><input id="manSide" type="text" inputmode="text" autocomplete="off" spellcheck="false"><span class="unit uL">in</span></div></div>
+      <div class="field"><label for="manHead">Head reveal</label>
+        <div class="inp"><input id="manHead" type="text" inputmode="text" autocomplete="off" spellcheck="false"><span class="unit uL">in</span></div></div>
+    </div>
+  </div>
+  <div class="verdict">
+    <div class="vc"><div class="k">Side reveal</div><div><span class="out" id="vSide">—</span></div><div class="n" id="nSide">no evidence yet</div></div>
+    <div class="vc"><div class="k">Head reveal</div><div><span class="out" id="vHead">—</span></div><div class="n" id="nHead">no evidence yet</div></div>
+  </div>
+</section>
+
+<section>
+  <div class="sechead"><h2>Sources</h2><span class="hint">each measurement, solved</span></div>
+  <div class="body"><table class="src" id="srcTable"><tbody></tbody></table></div>
+</section>
+
+<section>
+  <div class="sechead"><h2>Corner detail</h2><span class="hint" id="detailScale">enlarged</span></div>
+  <div id="detail"></div>
+  <div class="legend">
+    <span><i class="sw open"></i> Opening</span>
+    <span><i class="sw reveal"></i> Reveal — jamb left showing</span>
+    <span><i class="sw jamb"></i> Jamb edge under casing</span>
+    <span><i class="sw casing"></i> Casing</span>
+  </div>
+</section>
+
+<section>
+  <div class="sechead"><h2>Reinstall numbers</h2><span class="hint">what the trim needs to be</span></div>
+  <div class="rows">
+    <div class="cell mark"><div class="k">Set your gauge to</div><div><span class="out" id="oGauge">—</span></div><div class="n">side reveal, marked off the jamb face</div></div>
+    <div class="cell mark"><div class="k">Head gauge</div><div><span class="out" id="oGaugeH">—</span></div><div class="n">marked off the head jamb</div></div>
+    <div class="cell"><div class="k">Head casing — long point</div><div><span class="out" id="oHLP">—</span></div><div class="n" id="nHLP">outside to outside</div></div>
+    <div class="cell"><div class="k">Head casing — short point</div><div><span class="out" id="oHSP">—</span></div><div class="n" id="nHSP">inside to inside</div></div>
+    <div class="cell"><div class="k">Leg — short point</div><div><span class="out" id="oLSP">—</span></div><div class="n" id="nLSP">stool top to head reveal line</div></div>
+    <div class="cell"><div class="k">Leg — long point</div><div><span class="out" id="oLLP">—</span></div><div class="n">short point + casing width</div></div>
+  </div>
+</section>
+
+<section>
+  <div class="sechead"><h2>Notes</h2></div>
+  <div class="body" style="font-size:13.5px;line-height:1.5;color:var(--ink-2)">
+    <p style="margin:0 0 10px">Reveals get read to 1/32" here because 1/16" is half of a 1/8" reveal — too coarse to tell you anything. Layout numbers still round to 1/16".</p>
+    <p style="margin:0 0 10px">When sources disagree, trust the witness line. A jamb that has moved, a stool set at a new height, or a head casing that was recut all corrupt the arithmetic; the paint line does not.</p>
+    <p style="margin:0">Leg length assumes the casing lands on the stool. If you're setting the new stool at a different height, the old legs won't fit — the fit check below the sources tells you by how much.</p>
+  </div>
+  <div class="actions">
+    <button type="button" id="btnCopy">Copy findings</button>
+    <button type="button" id="btnPrint">Print sheet</button>
+    <button type="button" id="btnReset">Reset</button>
+    <textarea id="copyOut" rows="10" readonly></textarea>
+  </div>
+</section>
+
+<footer>Evidence beats arithmetic. Dry-fit one leg before you commit the whole set.</footer>
+<p style="text-align:center;padding:14px 0 0"><a href="index.html" style="font-family:ui-monospace,Menlo,monospace;font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:#1F5673;text-decoration:none">&larr; All sheets</a></p>
+
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  var IDS = ['jw','jh','cw','cwL','cwR','jt','wL','wR','wH','hSP','hLP','legL','manSide','manHead'];
+  var DEF_IN = {
+    jw:'32', jh:'48', cw:'3 1/2', cwL:'3 1/2', cwR:'3 1/2', jt:'3/4',
+    wL:'', wR:'', wH:'', hSP:'', hLP:'', legL:'', manSide:'3/16', manHead:'3/16'
+  };
+  var state = { unit:'in', asym:false, mode:'std', pad32:false };
+
+  /* ---------- parsing / formatting ---------- */
+
+  function parseInches(raw){
+    if(raw===null||raw===undefined) return NaN;
+    var s = String(raw).trim().toLowerCase();
+    if(!s) return NaN;
+    s = s.replace(/[“”"]/g,' ').replace(/[‘’]/g,"'").replace(/,/g,'');
+    s = s.replace(/\bin\b|\binch(es)?\b|\bft\b|\bfeet\b|\bfoot\b/g,function(m){
+      return (m==='ft'||m==='feet'||m==='foot') ? "'" : ' ';
+    });
+    s = s.replace(/-/g,' ').replace(/\s+/g,' ').trim();
+    if(!s) return NaN;
+    var total = 0;
+    var fm = s.match(/^(\d+(?:\.\d+)?)\s*'\s*/);
+    if(fm){ total += parseFloat(fm[1])*12; s = s.slice(fm[0].length).trim(); if(!s) return total; }
+    var m = s.match(/^(\d+(?:\.\d+)?)?\s*(?:(\d+)\s*\/\s*(\d+))?$/);
+    if(!m) return NaN;
+    if(m[1]===undefined && m[2]===undefined) return NaN;
+    if(m[1]!==undefined) total += parseFloat(m[1]);
+    if(m[2]!==undefined && m[3]!==undefined){
+      var den = parseInt(m[3],10); if(!den) return NaN;
+      total += parseInt(m[2],10)/den;
+    }
+    return isFinite(total) ? total : NaN;
+  }
+  function parseMm(raw){
+    if(raw===null||raw===undefined) return NaN;
+    var s = String(raw).trim().toLowerCase().replace(/mm/g,'').replace(/,/g,'').trim();
+    if(!s) return NaN;
+    if(!/^\d*\.?\d+$/.test(s)) return NaN;
+    var v = parseFloat(s);
+    return isFinite(v) ? v : NaN;
+  }
+  function parseVal(r){ return state.unit==='in' ? parseInches(r) : parseMm(r); }
+
+  /* den = 16 for layout, 32 for reveals */
+  function snap(v, den){
+    if(state.unit==='mm') return Math.round(v * (den===32?2:1)) / (den===32?2:1);
+    return Math.round(v*den)/den;
+  }
+  function inchParts(v, den){
+    var neg = v<0, s = Math.round(Math.abs(v)*den);
+    var whole = Math.floor(s/den), num = s%den, d = den;
+    while(num>0 && num%2===0){ num/=2; d/=2; }
+    return {whole:whole, num:num, den:d, neg:neg};
+  }
+  function fmtPlain(v, den){
+    den = den||16;
+    if(!isFinite(v)) return '';
+    if(state.unit==='mm') return String(Math.round(v * (den===32?2:1)) / (den===32?2:1));
+    var p = inchParts(v, den), o;
+    if(p.num===0) o = String(p.whole);
+    else if(p.whole===0) o = p.num+'/'+p.den;
+    else o = p.whole+' '+p.num+'/'+p.den;
+    return (p.neg?'-':'')+o;
+  }
+  function fmtTape(v, den){ return fmtPlain(v,den) + (state.unit==='in' ? '"' : ' mm'); }
+  function fmtHTML(v, den){
+    den = den||16;
+    if(!isFinite(v)) return '—';
+    if(state.unit==='mm') return fmtPlain(v,den)+'<span class="u">mm</span>';
+    var p = inchParts(v, den), h = (p.neg?'-':'');
+    if(p.num===0) h += p.whole;
+    else if(p.whole===0) h += '<span class="fr"><i>'+p.num+'</i><i>'+p.den+'</i></span>';
+    else h += p.whole+'<span class="fr"><i>'+p.num+'</i><i>'+p.den+'</i></span>';
+    return h+'<span class="u">"</span>';
+  }
+  function el(id){ return document.getElementById(id); }
+  function esc(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;'); }
+
+  /* ---------- session persistence ----------
+     Survives an app switch, a lock, a reboot. try/catch because private
+     browsing and blocked site data throw on access. */
+
+  var LSKEY = 'digital-scribe.reveal.v2';
+  var EVBOX = ['onW','onSP','onLP','onLeg'];
+
+  function saveState(){
+    try{
+      var d = { u:state.unit, a:state.asym, m:state.mode, p:!!state.pad32, v:{}, e:{} };
+      for(var i=0;i<IDS.length;i++) d.v[IDS[i]] = el(IDS[i]).value;
+      for(var j=0;j<EVBOX.length;j++) d.e[EVBOX[j]] = el(EVBOX[j]).checked;
+      localStorage.setItem(LSKEY, JSON.stringify(d));
+    }catch(e){}
+  }
+
+  function loadState(){
+    try{
+      var raw = localStorage.getItem(LSKEY);
+      if(!raw) return false;
+      var d = JSON.parse(raw);
+      if(!d || !d.v) return false;
+      if(d.u === 'in' || d.u === 'mm') state.unit = d.u;
+      if(d.m) state.mode = d.m;
+      state.asym = !!d.a;
+      state.pad32 = !!d.p;
+      for(var i=0;i<IDS.length;i++){
+        if(typeof d.v[IDS[i]] === 'string') el(IDS[i]).value = d.v[IDS[i]];
+      }
+      if(d.e){ for(var j=0;j<EVBOX.length;j++) el(EVBOX[j]).checked = !!d.e[EVBOX[j]]; }
+      var rs = document.querySelectorAll('input[name="mode"]');
+      for(var k=0;k<rs.length;k++) rs[k].checked = (rs[k].value === state.mode);
+      el('asym').checked = state.asym;
+      buildPad();
+      syncUnitUI();
+      return true;
+    }catch(e){ return false; }
+  }
+
+  function clearState(){ try{ localStorage.removeItem(LSKEY); }catch(e){} }
+
+  /* ---------- standards ---------- */
+
+  var STD_IN = [1/8, 3/16, 1/4, 5/16, 3/8, 1/2];
+  var STD_MM = [3, 4, 5, 6, 8, 10];
+  function standards(){ return state.unit==='in' ? STD_IN : STD_MM; }
+  function tight(){ return state.unit==='in' ? 1/32 : 0.8; }   /* "that's the one" */
+  function loose(){ return state.unit==='in' ? 1/16 : 1.6; }   /* "close, but check" */
+
+  function nearestStd(v){
+    var list = standards(), best = list[0], bd = Math.abs(v-list[0]);
+    for(var i=1;i<list.length;i++){
+      var d = Math.abs(v-list[i]);
+      if(d < bd){ bd = d; best = list[i]; }
+    }
+    return {v:best, d:v-best};
+  }
+
+  /* ---------- solve ---------- */
+
+  function solve(){
+    var v = {};
+    for(var i=0;i<IDS.length;i++) v[IDS[i]] = parseVal(el(IDS[i]).value);
+
+    var cwL = state.asym ? v.cwL : v.cw;
+    var cwR = state.asym ? v.cwR : v.cw;
+
+    var sources = [], warns = [], errs = [];
+    var sideVals = [], headVals = [];
+    var leftVal = NaN, rightVal = NaN;
+
+    function push(name, note, val, kind){
+      var row = {name:name, note:note, val:val, kind:kind};
+      if(isFinite(val)){
+        var ns = nearestStd(val);
+        row.std = ns.v; row.off = ns.d;
+        row.ok = Math.abs(ns.d) <= tight();
+      }
+      sources.push(row);
+    }
+
+    /* witness lines — direct */
+    if(el('onW').checked){
+      if(isFinite(v.wL)){ push('Witness line, left','measured directly off the jamb', v.wL, 'side'); sideVals.push(v.wL); leftVal = v.wL; }
+      if(isFinite(v.wR)){ push('Witness line, right','measured directly off the jamb', v.wR, 'side'); sideVals.push(v.wR); rightVal = v.wR; }
+      if(isFinite(v.wH)){ push('Witness line, head','measured directly off the head jamb', v.wH, 'head'); headVals.push(v.wH); }
+      if(!isFinite(v.wL) && !isFinite(v.wR) && !isFinite(v.wH)) warns.push({t:'Witness line ticked, nothing entered',m:'Measure the strip of jamb edge the old casing left showing — the finish usually changes right at the line.'});
+    }
+
+    /* head casing, short point: R = (SP − jamb) / 2 */
+    if(el('onSP').checked){
+      if(!isFinite(v.hSP)) warns.push({t:'Head short point missing',m:'Measure the inside edge of the head casing, tip to tip.'});
+      else if(!isFinite(v.jw)) errs.push('Enter the jamb opening width to solve the head casing.');
+      else {
+        var r2 = (v.hSP - v.jw)/2;
+        push('Head casing, short point','(inside edge − jamb width) ÷ 2', r2, 'side');
+        sideVals.push(r2);
+      }
+    }
+
+    /* head casing, long point: R = (LP − jamb − casings) / 2 */
+    if(el('onLP').checked){
+      if(!isFinite(v.hLP)) warns.push({t:'Head long point missing',m:'Measure the outside edge of the head casing, tip to tip.'});
+      else if(!isFinite(v.jw) || !isFinite(cwL) || !isFinite(cwR)) errs.push('Enter the jamb width and casing width to solve the head long point.');
+      else {
+        var r3 = (v.hLP - v.jw - cwL - cwR)/2;
+        push('Head casing, long point','(outside edge − jamb − both casings) ÷ 2', r3, 'side');
+        sideVals.push(r3);
+        warns.push({t:'Miter assumption',m:'The long point only equals jamb + reveals + casings on a 45° picture frame. A craftsman cap that overhangs the legs will read high by the overhang.'});
+      }
+    }
+
+    /* leg casing: R_head = leg − opening height */
+    if(el('onLeg').checked){
+      if(!isFinite(v.legL)) warns.push({t:'Leg length missing',m:'Measure the leg on its inside edge, from where it sat on the stool to the short point.'});
+      else if(!isFinite(v.jh)) errs.push('Enter the jamb opening height to solve the leg casing.');
+      else {
+        var r4 = v.legL - v.jh;
+        push('Leg casing length','leg inside edge − opening height', r4, 'head');
+        headVals.push(r4);
+      }
+    }
+
+    /* consensus */
+    function avg(a){ var s=0; for(var i=0;i<a.length;i++) s+=a[i]; return a.length ? s/a.length : NaN; }
+    function spread(a){ if(a.length<2) return 0; return Math.max.apply(null,a) - Math.min.apply(null,a); }
+
+    var sideRaw = avg(sideVals), headRaw = avg(headVals);
+    var sideSpread = spread(sideVals), headSpread = spread(headVals);
+
+    /* prefer the witness lines when they exist */
+    if(isFinite(leftVal) || isFinite(rightVal)){
+      var w = [];
+      if(isFinite(leftVal)) w.push(leftVal);
+      if(isFinite(rightVal)) w.push(rightVal);
+      sideRaw = avg(w);
+    }
+    if(el('onW').checked && isFinite(v.wH)) headRaw = v.wH;
+
+    /* if only side evidence exists, the head almost always matches */
+    var headInferred = false;
+    if(!isFinite(headRaw) && isFinite(sideRaw)){ headRaw = sideRaw; headInferred = true; }
+
+    /* apply the chooser */
+    var sideOut = NaN, headOut = NaN, basis = '';
+    if(state.mode === 'man'){
+      sideOut = v.manSide; headOut = v.manHead; basis = 'set by hand';
+      if(!isFinite(sideOut) || !isFinite(headOut)) errs.push('Enter both manual reveals, or switch back to nearest standard.');
+    } else if(state.mode === 'meas'){
+      sideOut = isFinite(sideRaw) ? snap(sideRaw,32) : NaN;
+      headOut = isFinite(headRaw) ? snap(headRaw,32) : NaN;
+      basis = 'measured, to the nearest 1/32';
+    } else {
+      sideOut = isFinite(sideRaw) ? nearestStd(sideRaw).v : NaN;
+      headOut = isFinite(headRaw) ? nearestStd(headRaw).v : NaN;
+      basis = 'snapped to the nearest standard reveal';
+    }
+
+    /* sanity */
+    if(isFinite(v.jt) && isFinite(sideOut) && sideOut > v.jt){
+      errs.push('A side reveal of '+fmtTape(sideOut,32)+' is wider than the jamb edge itself ('+fmtTape(v.jt)+') — the casing would hang over the opening. Re-check the jamb width.');
+    }
+    if(isFinite(sideOut) && sideOut <= 0){
+      errs.push('The numbers give a side reveal of zero or less, which means the casing ran flush to the jamb face. Check the jamb width and the head casing measurement.');
+    }
+    if(sideSpread > loose()){
+      warns.push({t:'Side sources disagree',m:'Your side measurements span '+fmtTape(sideSpread,32)+'. Something has moved, or the head casing was recut. Go with the witness line.'});
+    } else if(sideSpread > tight()){
+      warns.push({t:'Slight side disagreement',m:'Side sources vary by '+fmtTape(sideSpread,32)+' — normal slop in old work, but worth a second look.'});
+    }
+    if(headSpread > loose()){
+      warns.push({t:'Head sources disagree',m:'Head measurements span '+fmtTape(headSpread,32)+'.'});
+    }
+    if(isFinite(leftVal) && isFinite(rightVal) && Math.abs(leftVal-rightVal) > tight()){
+      warns.push({t:'Sides were not equal',m:'Left reads '+fmtTape(leftVal,32)+' and right reads '+fmtTape(rightVal,32)+'. The original was set off-centre — match each side to its own witness line rather than splitting the difference.'});
+    }
+    if(isFinite(sideRaw) && state.mode==='std'){
+      var ns2 = nearestStd(sideRaw);
+      if(Math.abs(ns2.d) > loose()){
+        warns.push({t:'Not a standard reveal',m:'Measured '+fmtTape(sideRaw,32)+', which is '+fmtTape(Math.abs(ns2.d),32)+' off '+fmtTape(ns2.v,32)+'. The original may have been eyeballed. “As measured” will match the old nail holes better.'});
+      }
+    }
+
+    /* reinstall numbers */
+    var out = {};
+    if(isFinite(sideOut) && isFinite(v.jw) && isFinite(cwL) && isFinite(cwR)){
+      out.hSP = snap(v.jw + 2*sideOut, 16);
+      out.hLP = snap(v.jw + 2*sideOut + cwL + cwR, 16);
+    }
+    if(isFinite(headOut) && isFinite(v.jh)){
+      out.lSP = snap(v.jh + headOut, 16);
+      if(isFinite(cwL)) out.lLP = snap(v.jh + headOut + cwL, 16);
+    }
+
+    /* fit check against the old pieces */
+    var fits = [];
+    if(el('onLP').checked && isFinite(v.hLP) && isFinite(out.hLP)) fits.push({n:'Head casing (long point)', have:v.hLP, want:out.hLP});
+    if(el('onSP').checked && isFinite(v.hSP) && isFinite(out.hSP)) fits.push({n:'Head casing (short point)', have:v.hSP, want:out.hSP});
+    if(el('onLeg').checked && isFinite(v.legL) && isFinite(out.lSP)) fits.push({n:'Leg casing', have:v.legL, want:out.lSP});
+
+    return {
+      errs:errs, warns:warns, sources:sources, fits:fits,
+      sideRaw:sideRaw, headRaw:headRaw, sideOut:sideOut, headOut:headOut,
+      headInferred:headInferred, basis:basis, out:out,
+      sideCount:sideVals.length, headCount:headVals.length,
+      jt:v.jt, sideOutStd:isFinite(sideRaw)?nearestStd(sideRaw):null
+    };
+  }
+
+  /* ---------- detail drawing ---------- */
+
+  var last = null;
+
+  function drawDetail(r){
+    var host = el('detail');
+    var Rs = r && isFinite(r.sideOut) ? r.sideOut : NaN;
+    var Rh = r && isFinite(r.headOut) ? r.headOut : NaN;
+    var T  = r && isFinite(r.jt) ? r.jt : (state.unit==='in' ? 0.75 : 19);
+    if(!isFinite(Rs) || !isFinite(Rh) || Rs<=0 || Rh<=0){
+      host.innerHTML = '<div style="padding:26px 12px;text-align:center;color:var(--ink-3);font-size:13px">The detail draws once a reveal has been solved.</div>';
+      el('detailScale').textContent = 'enlarged';
+      return;
+    }
+
+    var W = Math.max(260, host.clientWidth || 340);
+    var small = W < 470;
+    var F = small ? 10 : 12;
+    var pad = small ? 34 : 44;
+
+    var casShown = Math.min(state.unit==='in' ? 1.25 : 32, 1e9);
+    var openShown = state.unit==='in' ? 1.0 : 25;
+    var spanX = T + casShown + openShown;          /* model width shown */
+    var scale = (W - pad*2) / spanX;
+    var spanY = spanX;
+    var H = spanY*scale + pad*2;
+
+    /* model origin: inside corner of the opening. Opening is +x / +y. */
+    var ox = pad + (T + casShown)*scale;
+    var oy = pad + (T + casShown)*scale;
+    function X(x){ return ox + x*scale; }
+    function Y(y){ return oy + y*scale; }
+    function n(x){ return Math.round(x*100)/100; }
+
+    var x0 = X(-(T+casShown)), x1 = X(openShown);
+    var y0 = Y(-(T+casShown)), y1 = Y(openShown);
+
+    var s = [];
+    s.push('<svg viewBox="0 0 '+n(W)+' '+n(H)+'" width="'+n(W)+'" height="'+n(H)+'" xmlns="http://www.w3.org/2000/svg" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" role="img" aria-label="Enlarged corner detail showing the reveal">');
+    s.push('<defs><marker id="ar2" markerWidth="9" markerHeight="9" refX="8.5" refY="4.5" orient="auto-start-reverse" markerUnits="userSpaceOnUse"><path d="M0.5,1 L8.5,4.5 L0.5,8 Z" fill="#1F5673"/></marker></defs>');
+
+    /* opening */
+    s.push('<rect x="'+n(X(0))+'" y="'+n(Y(0))+'" width="'+n(x1-X(0))+'" height="'+n(y1-Y(0))+'" fill="#DCDDD7"/>');
+    s.push('<text x="'+n(X(openShown*0.55))+'" y="'+n(Y(openShown*0.62))+'" font-size="'+(small?9:10)+'" letter-spacing="1.6" text-anchor="middle" fill="#7C8286">OPENING</text>');
+
+    /* jamb edge bands (head band across the top, leg band down the left) */
+    s.push('<rect x="'+n(X(-T))+'" y="'+n(Y(-T))+'" width="'+n(X(openShown)-X(-T))+'" height="'+n(Y(0)-Y(-T))+'" fill="#EFE3C6"/>');
+    s.push('<rect x="'+n(X(-T))+'" y="'+n(Y(-T))+'" width="'+n(X(0)-X(-T))+'" height="'+n(Y(openShown)-Y(-T))+'" fill="#EFE3C6"/>');
+
+    /* exposed reveal strips */
+    s.push('<rect x="'+n(X(-Rs))+'" y="'+n(Y(-Rh))+'" width="'+n(X(openShown)-X(-Rs))+'" height="'+n(Y(0)-Y(-Rh))+'" fill="rgba(228,178,0,0.55)"/>');
+    s.push('<rect x="'+n(X(-Rs))+'" y="'+n(Y(-Rh))+'" width="'+n(X(0)-X(-Rs))+'" height="'+n(Y(openShown)-Y(-Rh))+'" fill="rgba(228,178,0,0.55)"/>');
+
+    /* casing: L-shape with a 45 miter, outer edges dashed (piece continues) */
+    var cx = X(-(Rs+casShown)), cy = Y(-(Rh+casShown));
+    s.push('<path d="M '+n(X(-Rs))+' '+n(y1)+' L '+n(X(-Rs))+' '+n(Y(-Rh))+' L '+n(x1)+' '+n(Y(-Rh))+' L '+n(x1)+' '+n(cy)+' L '+n(cx)+' '+n(cy)+' L '+n(cx)+' '+n(y1)+' Z" fill="#FFFFFF" stroke="#16181A" stroke-width="1.6" stroke-linejoin="miter"/>');
+    s.push('<line x1="'+n(cx)+'" y1="'+n(cy)+'" x2="'+n(X(-Rs))+'" y2="'+n(Y(-Rh))+'" stroke="#16181A" stroke-width="1.1"/>');
+    s.push('<text x="'+n((cx+X(-Rs))/2 - 6)+'" y="'+n(cy + (Y(-Rh)-cy)*0.62)+'" font-size="'+(small?9:10)+'" letter-spacing="1.4" text-anchor="middle" fill="#4A4F52" transform="rotate(-45 '+n((cx+X(-Rs))/2-6)+' '+n(cy+(Y(-Rh)-cy)*0.62)+')">CASING</text>');
+
+    /* jamb face lines */
+    s.push('<line x1="'+n(X(0))+'" y1="'+n(Y(-T))+'" x2="'+n(X(0))+'" y2="'+n(y1)+'" stroke="#16181A" stroke-width="1.6"/>');
+    s.push('<line x1="'+n(X(-T))+'" y1="'+n(Y(0))+'" x2="'+n(x1)+'" y2="'+n(Y(0))+'" stroke="#16181A" stroke-width="1.6"/>');
+    s.push('<line x1="'+n(X(-T))+'" y1="'+n(Y(-T))+'" x2="'+n(X(-T))+'" y2="'+n(y1)+'" stroke="#7C8286" stroke-width="0.9" stroke-dasharray="3 3"/>');
+    s.push('<line x1="'+n(X(-T))+'" y1="'+n(Y(-T))+'" x2="'+n(x1)+'" y2="'+n(Y(-T))+'" stroke="#7C8286" stroke-width="0.9" stroke-dasharray="3 3"/>');
+
+    /* dimensions */
+    var DIM = '#1F5673';
+    function txt(x,y,t,rot){
+      var tr = rot ? ' transform="rotate('+rot+' '+n(x)+' '+n(y)+')"' : '';
+      s.push('<text x="'+n(x)+'" y="'+n(y)+'" font-size="'+F+'" text-anchor="middle" dominant-baseline="central" fill="'+DIM+'" paint-order="stroke" stroke="#FBFBF9" stroke-width="3.5"'+tr+'>'+esc(t)+'</text>');
+    }
+    /* side reveal, dimensioned out into the opening */
+    var dy = Y(openShown*0.28);
+    s.push('<line x1="'+n(X(-Rs)-16)+'" y1="'+n(dy)+'" x2="'+n(X(-Rs))+'" y2="'+n(dy)+'" stroke="'+DIM+'" stroke-width="1" marker-start="url(#ar2)"/>');
+    s.push('<line x1="'+n(X(0))+'" y1="'+n(dy)+'" x2="'+n(X(0)+16)+'" y2="'+n(dy)+'" stroke="'+DIM+'" stroke-width="1" marker-end="url(#ar2)"/>');
+    s.push('<line x1="'+n(X(-Rs))+'" y1="'+n(dy)+'" x2="'+n(X(0))+'" y2="'+n(dy)+'" stroke="'+DIM+'" stroke-width="1"/>');
+    txt(X(0)+16+F*fmtPlain(Rs,32).length*0.34, dy, fmtPlain(Rs,32));
+    /* head reveal */
+    var dx = X(openShown*0.28);
+    s.push('<line x1="'+n(dx)+'" y1="'+n(Y(-Rh)-16)+'" x2="'+n(dx)+'" y2="'+n(Y(-Rh))+'" stroke="'+DIM+'" stroke-width="1" marker-start="url(#ar2)"/>');
+    s.push('<line x1="'+n(dx)+'" y1="'+n(Y(0))+'" x2="'+n(dx)+'" y2="'+n(Y(0)+16)+'" stroke="'+DIM+'" stroke-width="1" marker-end="url(#ar2)"/>');
+    s.push('<line x1="'+n(dx)+'" y1="'+n(Y(-Rh))+'" x2="'+n(dx)+'" y2="'+n(Y(0))+'" stroke="'+DIM+'" stroke-width="1"/>');
+    txt(dx, Y(-Rh)-16-F*0.9, fmtPlain(Rh,32));
+    /* jamb thickness */
+    var ty = Y(openShown*0.72);
+    s.push('<line x1="'+n(X(-T))+'" y1="'+n(ty)+'" x2="'+n(X(0))+'" y2="'+n(ty)+'" stroke="'+DIM+'" stroke-width="1" marker-start="url(#ar2)" marker-end="url(#ar2)" opacity="0.75"/>');
+    txt((X(-T)+X(0))/2, ty+F*1.0, fmtPlain(T,16));
+
+    s.push('</svg>');
+    host.innerHTML = s.join('');
+    el('detailScale').textContent = 'enlarged  ·  ' + (Math.round(scale*10)/10) + (state.unit==='in' ? ' px per inch' : ' px per mm');
+  }
+
+  /* ---------- render ---------- */
+
+  function render(){
+    var f = document.querySelectorAll('[data-sym],[data-asym]');
+    for(var i=0;i<f.length;i++){
+      f[i].style.display = (f[i].hasAttribute('data-asym') ? state.asym : !state.asym) ? '' : 'none';
+    }
+    var evs = [['onW','evW'],['onSP','evSP'],['onLP','evLP'],['onLeg','evLeg']];
+    for(var j=0;j<evs.length;j++) el(evs[j][1]).classList.toggle('on', el(evs[j][0]).checked);
+    el('manualRow').style.display = state.mode==='man' ? '' : 'none';
+
+    var r = solve();
+    last = r;
+
+    var h = '';
+    if(r.errs.length) h += '<div class="banner err"><b>Check the inputs</b>'+r.errs.map(esc).join('<br>')+'</div>';
+    for(var k=0;k<r.warns.length;k++) h += '<div class="banner warn"><b>'+esc(r.warns[k].t)+'</b>'+esc(r.warns[k].m)+'</div>';
+    if(!r.errs.length && !r.warns.length && r.sources.length && r.sideOutStd && Math.abs(r.sideOutStd.d) <= tight()){
+      h += '<div class="banner ok"><b>Clean read</b>Every source lands on '+fmtTape(r.sideOutStd.v,32)+' within a 32nd. That was the reveal.</div>';
+    }
+    el('alerts').innerHTML = h;
+
+    saveState();
+    el('modeHint').textContent = r.basis;
+    el('vSide').innerHTML = fmtHTML(r.sideOut, 32);
+    el('vHead').innerHTML = fmtHTML(r.headOut, 32);
+    el('nSide').textContent = r.sideCount
+      ? (isFinite(r.sideRaw) ? 'from ' + r.sideCount + ' source' + (r.sideCount>1?'s':'') + ' · raw ' + (state.unit==='in' ? (Math.round(r.sideRaw*1000)/1000)+'"' : (Math.round(r.sideRaw*10)/10)+' mm') : 'no evidence yet')
+      : (state.mode==='man' ? 'set by hand' : 'no evidence yet');
+    el('nHead').textContent = r.headInferred ? 'no head evidence — assumed equal to the sides'
+      : (r.headCount ? 'from ' + r.headCount + ' source' + (r.headCount>1?'s':'') : (state.mode==='man' ? 'set by hand' : 'no evidence yet'));
+
+    /* sources table */
+    var t = '';
+    if(!r.sources.length){
+      t = '<tr><td colspan="3" style="color:var(--ink-3);font-size:13px;padding:4px 0">Tick a source above and fill it in. Two independent measurements that agree is all the proof you need.</td></tr>';
+    } else {
+      t += '<tr><th>Source</th><th>Reveal</th><th>Nearest standard</th></tr>';
+      for(var m=0;m<r.sources.length;m++){
+        var s = r.sources[m];
+        t += '<tr><td><b style="font-weight:650">'+esc(s.name)+'</b><br><span style="color:var(--ink-3);font-size:11.5px">'+esc(s.note)+'</span></td>';
+        t += '<td class="v">'+(isFinite(s.val)? fmtTape(s.val,32) : '—')+'</td>';
+        if(isFinite(s.val)){
+          var sign = s.off>0?'+':'';
+          t += '<td class="d">'+fmtTape(s.std,32)+'<br><span class="tag '+(s.ok?'ok':'off')+'">'+(Math.abs(s.off)<1e-9?'exact':sign+fmtPlain(s.off,64))+'</span></td>';
+        } else t += '<td class="d">—</td>';
+        t += '</tr>';
+      }
+    }
+    if(r.fits.length){
+      t += '<tr><th style="padding-top:12px">Fit check — old piece vs. opening</th><th style="padding-top:12px">You have</th><th style="padding-top:12px">You need</th></tr>';
+      for(var p=0;p<r.fits.length;p++){
+        var fz = r.fits[p], d = fz.have - fz.want;
+        var verdict = Math.abs(d) < (state.unit==='in'?1/32:0.8) ? '<span class="tag ok">fits</span>'
+          : (d>0 ? '<span class="tag off">'+fmtPlain(d,32)+' long</span>' : '<span class="tag off">'+fmtPlain(-d,32)+' short</span>');
+        t += '<tr><td>'+esc(fz.n)+'<br>'+verdict+'</td><td class="v">'+fmtTape(fz.have,32)+'</td><td class="v">'+fmtTape(fz.want,16)+'</td></tr>';
+      }
+    }
+    el('srcTable').querySelector('tbody').innerHTML = t;
+
+    /* reinstall */
+    el('oGauge').innerHTML  = fmtHTML(r.sideOut,32);
+    el('oGaugeH').innerHTML = fmtHTML(r.headOut,32);
+    el('oHLP').innerHTML = fmtHTML(r.out.hLP,16);
+    el('oHSP').innerHTML = fmtHTML(r.out.hSP,16);
+    el('oLSP').innerHTML = fmtHTML(r.out.lSP,16);
+    el('oLLP').innerHTML = fmtHTML(r.out.lLP,16);
+
+    drawDetail(r);
+  }
+
+  function copyText(){
+    var r = last; if(!r) return '';
+    var L = ['REVEAL FINDER — FINDINGS','Basis: '+r.basis,''];
+    L.push('Side reveal ........... '+(isFinite(r.sideOut)?fmtTape(r.sideOut,32):'—'));
+    L.push('Head reveal ........... '+(isFinite(r.headOut)?fmtTape(r.headOut,32):'—')+(r.headInferred?'  (assumed = sides)':''));
+    L.push('');
+    for(var i=0;i<r.sources.length;i++){
+      var s = r.sources[i];
+      L.push('  '+s.name+': '+(isFinite(s.val)?fmtTape(s.val,32):'—')+(isFinite(s.val)?'  → nearest '+fmtTape(s.std,32):''));
+    }
+    L.push('');
+    L.push('Head casing long point  '+(isFinite(r.out.hLP)?fmtTape(r.out.hLP,16):'—'));
+    L.push('Head casing short point '+(isFinite(r.out.hSP)?fmtTape(r.out.hSP,16):'—'));
+    L.push('Leg short point ....... '+(isFinite(r.out.lSP)?fmtTape(r.out.lSP,16):'—'));
+    L.push('Leg long point ........ '+(isFinite(r.out.lLP)?fmtTape(r.out.lLP,16):'—'));
+    return L.join('\n');
+  }
+
+  /* ---------- fraction pad ---------- */
+
+  var F16 = ['1/16','1/8','3/16','1/4','5/16','3/8','7/16','1/2','9/16','5/8','11/16','3/4','13/16','7/8','15/16'];
+  var F32 = ['1/32','3/32','5/32','7/32','9/32','11/32','13/32','15/32','17/32','19/32','21/32','23/32'];
+  var pad = el('pad'), focused = null;
+
+  function buildPad(){
+    var set = state.pad32 ? F32 : F16, h = '';
+    for(var i=0;i<set.length;i++) h += '<button type="button" data-f="'+set[i]+'">'+set[i]+'</button>';
+    h += '<button type="button" class="alt" data-f="__swap">'+(state.pad32?'16ths':'32nds')+'</button>';
+    h += '<button type="button" class="clr" data-f="__clear">clear</button>';
+    pad.innerHTML = h;
+  }
+  buildPad();
+  pad.addEventListener('pointerdown', function(e){ e.preventDefault(); });
+  pad.addEventListener('click', function(e){
+    var b = e.target.closest('button'); if(!b) return;
+    var f = b.getAttribute('data-f');
+    if(f === '__swap'){ state.pad32 = !state.pad32; buildPad(); if(focused) focused.focus(); return; }
+    if(!focused) return;
+    if(f === '__clear') focused.value = '';
+    else {
+      var base = focused.value.trim().replace(/\s*\d+\s*\/\s*\d+\s*$/,'').trim();
+      focused.value = base ? base+' '+f : f;
+    }
+    focused.focus();
+    render();
+  });
+
+  /* ---------- wiring ---------- */
+
+  function syncUnitUI(){
+    var isIn = state.unit==='in';
+    el('uIn').setAttribute('aria-pressed', isIn?'true':'false');
+    el('uMm').setAttribute('aria-pressed', isIn?'false':'true');
+    var us = document.querySelectorAll('.uL');
+    for(var i=0;i<us.length;i++) us[i].textContent = isIn ? 'in' : 'mm';
+    el('tbUnits').textContent = isIn ? 'inches' : 'millimetres';
+    el('tbRes').textContent = isIn ? '1/32"' : '0.5 mm';
+    el('tbLay').textContent = isIn ? '1/16"' : '1 mm';
+    pad.style.display = isIn ? '' : 'none';
+  }
+  function switchUnit(next){
+    if(next === state.unit) return;
+    var vals = {};
+    for(var i=0;i<IDS.length;i++) vals[IDS[i]] = parseVal(el(IDS[i]).value);
+    state.unit = next;
+    for(var j=0;j<IDS.length;j++){
+      var v = vals[IDS[j]];
+      if(!isFinite(v)){ el(IDS[j]).value = ''; continue; }
+      var conv = next==='mm' ? v*25.4 : v/25.4;
+      el(IDS[j]).value = fmtPlain(snap(conv,32),32);
+    }
+    syncUnitUI();
+    render();
+  }
+  function setDefaults(){
+    state.unit='in'; state.asym=false; state.mode='std';
+    el('asym').checked = false;
+    var rs = document.querySelectorAll('input[name="mode"]');
+    for(var i=0;i<rs.length;i++) rs[i].checked = (rs[i].value==='std');
+    ['onW','onSP','onLP','onLeg'].forEach(function(id){ el(id).checked = (id==='onW'); });
+    for(var k=0;k<IDS.length;k++) el(IDS[k]).value = DEF_IN[IDS[k]];
+    syncUnitUI();
+  }
+
+  for(var i=0;i<IDS.length;i++){
+    (function(id){
+      var input = el(id);
+      input.addEventListener('input', render);
+      input.addEventListener('focus', function(){
+        focused = input;
+        if(state.unit==='in'){ var w = input.closest('.field'); if(w){ w.appendChild(pad); pad.classList.add('on'); } }
+        input.select();
+      });
+      input.addEventListener('blur', function(){
+        setTimeout(function(){ if(document.activeElement !== input){ pad.classList.remove('on'); focused = null; } },0);
+      });
+    })(IDS[i]);
+  }
+  ['onW','onSP','onLP','onLeg','asym'].forEach(function(id){
+    el(id).addEventListener('change', function(e){
+      if(id==='asym'){
+        state.asym = e.target.checked;
+        if(state.asym){
+          if(!el('cwL').value) el('cwL').value = el('cw').value;
+          if(!el('cwR').value) el('cwR').value = el('cw').value;
+        }
+      }
+      render();
+    });
+  });
+  var modeRadios = document.querySelectorAll('input[name="mode"]');
+  for(var m=0;m<modeRadios.length;m++){
+    modeRadios[m].addEventListener('change', function(e){ state.mode = e.target.value; render(); });
+  }
+  el('uIn').addEventListener('click', function(){ switchUnit('in'); });
+  el('uMm').addEventListener('click', function(){ switchUnit('mm'); });
+  el('btnPrint').addEventListener('click', function(){ window.print(); });
+  el('btnReset').addEventListener('click', function(){ clearState(); setDefaults(); render(); });
+  el('btnCopy').addEventListener('click', function(){
+    var t = copyText(); if(!t) return;
+    var ta = el('copyOut');
+    function fb(){ ta.style.display='block'; ta.value=t; ta.focus(); ta.select(); el('btnCopy').textContent='Select and copy'; }
+    if(navigator.clipboard && navigator.clipboard.writeText){
+      navigator.clipboard.writeText(t).then(function(){
+        el('btnCopy').textContent='Copied';
+        setTimeout(function(){ el('btnCopy').textContent='Copy findings'; },1600);
+      }).catch(fb);
+    } else fb();
+  });
+
+  var rt=null;
+  window.addEventListener('resize', function(){ clearTimeout(rt); rt=setTimeout(function(){ if(last) drawDetail(last); },120); });
+
+  setDefaults();
+  loadState();
+  render();
+
+  document.addEventListener('visibilitychange', function(){
+    if(document.visibilityState === 'hidden') saveState();
+  });
+  window.addEventListener('pagehide', saveState);
+})();
+</script>
+<script>
+if('serviceWorker' in navigator){
+  window.addEventListener('load', function(){
+    navigator.serviceWorker.register('sw.js', {scope:'./'}).catch(function(){});
+  });
+}
+</script>
+</body>
+</html>

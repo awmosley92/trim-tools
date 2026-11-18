@@ -1,0 +1,3 @@
+# Private jobsite tools. Not secret, just not worth indexing.
+User-agent: *
+Disallow: /
