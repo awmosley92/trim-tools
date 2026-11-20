@@ -30,12 +30,6 @@ Caveat: the two tools do not share values, and there is no multi-window log —
 one set of numbers per tool at a time.
 
 
-## Not in search results
-
-`robots.txt` disallows crawlers and every page carries
-`<meta name="robots" content="noindex, nofollow">`. That keeps the site out of
-Google. It does **not** make it private — anyone with the URL can still open it.
-
 ## Files
 
 ```
