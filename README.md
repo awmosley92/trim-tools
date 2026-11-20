@@ -6,16 +6,6 @@ Two offline finish-carpentry calculators, packaged as an installable web app. 10
 - `reveal.html` — Sheet S-02, reveal finder for reused trim
 - `index.html` — landing page linking both
 
-## Deploy to GitHub Pages
-
-1. Create a public repo (e.g. `trim-tools`).
-2. Upload **the contents of this folder** to the repo root — not the folder itself.
-   Keep `icons/` as a subfolder. Include the hidden `.nojekyll` file; if the web
-   uploader won't take it, create it with **Add file → Create new file**, name it
-   `.nojekyll`, leave it empty, commit.
-3. Settings → Pages → Build and deployment → Source: **Deploy from a branch**,
-   branch `main`, folder `/ (root)`. Save.
-4. Wait about a minute. Live at `https://<username>.github.io/trim-tools/`.
 
 ## Install on the iPhone
 
@@ -39,19 +29,6 @@ you delete the home-screen icon, or if you tap **Reset** inside a tool.
 Caveat: the two tools do not share values, and there is no multi-window log —
 one set of numbers per tool at a time.
 
-## Updating
-
-Edit the file, upload the new version, done — Pages redeploys on every push.
-
-Phones that already installed it hold a cached copy. The service worker refreshes
-in the background, so a second launch picks up changes. To force it immediately,
-bump `VERSION` at the top of `sw.js`:
-
-```js
-const VERSION = 'ds-2026-11-18-a';   // change the date/letter
-```
-
-That invalidates the old cache on next load.
 
 ## Not in search results
 
